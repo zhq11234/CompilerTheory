@@ -11,11 +11,33 @@ endif()
 
 project ("CompilerTheory")
 
+
+
+set(PROJECT_SOURCE
+	CompilerTheory.cpp
+	CompilerTheory.h
+	"include/token.h"
+	"include/ast.h"
+	"include/symtab.h"
+	"include/quadruple.h"
+	"include/lexer.h"
+	"src/lexer.cpp"
+	"include/parser.h"
+	"src/parser.cpp"
+	"include/semantic.h"
+	"src/semantic.cpp"
+	"include/irgen.h" 
+	"src/irgen.cpp" 
+	"src/symtab.cpp"
+)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
 # 将源代码添加到此项目的可执行文件。
-add_executable (CompilerTheory "CompilerTheory.cpp" "CompilerTheory.h")
+add_executable (${PROJECT_NAME} ${PROJECT_SOURCE} )
+target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET CompilerTheory PROPERTY CXX_STANDARD 20)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: 如有需要，请添加测试并安装目标。
