@@ -1,4 +1,4 @@
-# CMakeList.txt: CompilerTheory 的 CMake 项目
+﻿# CMakeList.txt: CompilerTheory 的 CMake 项目
 #
 cmake_minimum_required (VERSION 3.8)
 
@@ -13,7 +13,7 @@ project ("CompilerTheory")
 # ============================================================
 #  选项
 # ============================================================
-option(ENABLE_GUI "Build with Qt6 GUI" OFF)
+option(ENABLE_GUI "Build with Qt6 GUI" ON)
 
 # ============================================================
 #  核心编译器源码（GUI 和 CLI 共用）
@@ -64,7 +64,7 @@ if(ENABLE_GUI)
 	)
 
 	add_executable(${PROJECT_NAME} ${GUI_SOURCE} ${CORE_SOURCE})
-	target_include_directories(${PROJECT_NAME} PRIVATE include)
+	target_include_directories(${PROJECT_NAME} PRIVATE include src/GUI)
 	target_link_libraries(${PROJECT_NAME} Qt6::Widgets Qt6::Concurrent)
 
 else()
