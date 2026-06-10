@@ -64,7 +64,7 @@ if(ENABLE_GUI)
 	)
 
 	add_executable(${PROJECT_NAME} ${GUI_SOURCE} ${CORE_SOURCE})
-	target_include_directories(${PROJECT_NAME} PRIVATE include)
+	target_include_directories(${PROJECT_NAME} PRIVATE include src/GUI)
 	target_link_libraries(${PROJECT_NAME} Qt6::Widgets Qt6::Concurrent)
 
 else()
