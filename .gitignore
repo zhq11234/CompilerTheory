@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Codegraph & Claude
+.codegraph/
+.claude/
+
+# CMake build directories
+build/
+build_cli/
+build_gui/
