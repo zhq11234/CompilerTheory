@@ -1,0 +1,10 @@
+{
+  "source": "test2.src",
+  "timestamp": "2026-06-11T10:00:02",
+  "symtab": [
+    {"name": "a", "type": "int", "scope": 1, "line": 1},
+    {"name": "b", "type": "int", "scope": 1, "line": 2},
+    {"name": "c", "type": "int", "scope": 1, "line": 4}
+  ],
+  "errors": ["line 4: variable 'c' used before declaration"]
+}

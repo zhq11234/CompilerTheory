@@ -36,7 +36,18 @@ public:
 	std::vector<std::string> getIRErrors() const;
 	std::string getParserLog() const;
 
+	std::string getTokenSource() const     { return tokenSource; }
+	std::string getTokenTimestamp() const  { return tokenTimestamp; }
+	std::string getASTSource() const       { return astSource; }
+	std::string getASTTimestamp() const    { return astTimestamp; }
+	std::string getSemanticSource() const  { return semanticSource; }
+	std::string getSemanticTimestamp() const { return semanticTimestamp; }
+	std::string getIRSource() const        { return irSource; }
+	std::string getIRTimestamp() const     { return irTimestamp; }
+
 signals:
+	void stepStarted(const QString& stepName);
+	void stepFinished(const QString& stepName);
 	void tokensLoaded();
 	void astLoaded();
 	void semanticLoaded();
@@ -97,6 +108,11 @@ private:
 	std::vector<std::string> semanticErrors;
 	std::vector<std::string> irErrors;
 	std::string parserLog;
+
+	std::string tokenSource, tokenTimestamp;
+	std::string astSource, astTimestamp;
+	std::string semanticSource, semanticTimestamp;
+	std::string irSource, irTimestamp;
 
 	QFutureWatcher<TokenPayload>    tokenWatcher;
 	QFutureWatcher<ASTPayload>      astWatcher;

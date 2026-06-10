@@ -12,14 +12,16 @@ public:
 	explicit CompilerController(CompilerModel* model, CompilerView* view,
 	                            QObject* parent = nullptr);
 	void init();
+	void openSpecificFile(const QString& path);
 
-private slots:
+public slots:
 	void handleOpenFile();
 	void handleRunLexer();
 	void handleRunParser();
 	void handleRunSemantic();
 	void handleRunIR();
 	void handleRunAll();
+	void saveSourceFile();
 
 private:
 	CompilerModel* model;
@@ -34,7 +36,6 @@ private:
 	std::string pathIR;
 
 	void derivePaths(const std::string& srcPath);
-	void saveSourceFile();
 	void refreshAll();
 };
 

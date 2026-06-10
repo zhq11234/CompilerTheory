@@ -53,18 +53,27 @@ if(ENABLE_GUI)
 
 	set(GUI_SOURCE
 		"src/GUI/main.cpp"
-		"src/GUI/compilermodel.h"
-		"src/GUI/compilermodel.cpp"
-		"src/GUI/compilerview.cpp"
-		"src/GUI/compilerview.h"
-		"src/GUI/compilercontroller.h"
-		"src/GUI/compilercontroller.cpp"
-		"src/GUI/mainwindow.cpp"
-		"src/GUI/mainwindow.h"
+		"src/GUI/core/compilermodel.h"
+		"src/GUI/core/compilermodel.cpp"
+		"src/GUI/core/compilerview.h"
+		"src/GUI/core/compilerview.cpp"
+		"src/GUI/core/compilercontroller.h"
+		"src/GUI/core/compilercontroller.cpp"
+		"src/GUI/core/mainwindow.h"
+		"src/GUI/core/mainwindow.cpp"
+		"src/GUI/widgets/welcomepage.h"
+		"src/GUI/widgets/welcomepage.cpp"
+		"src/GUI/widgets/sidepanel.h"
+		"src/GUI/widgets/sidepanel.cpp"
+			"src/GUI/widgets/asttreedelegate.h"
+			"src/GUI/widgets/asttreedelegate.cpp"
+		"src/GUI/widgets/tokencardwidget.h"
+		"src/GUI/widgets/tokencardwidget.cpp"
+		"src/GUI/resources/resources.qrc"
 	)
 
 	add_executable(${PROJECT_NAME} ${GUI_SOURCE} ${CORE_SOURCE})
-	target_include_directories(${PROJECT_NAME} PRIVATE include src/GUI)
+	target_include_directories(${PROJECT_NAME} PRIVATE include src/GUI src/GUI/core src/GUI/widgets)
 	target_link_libraries(${PROJECT_NAME} Qt6::Widgets Qt6::Concurrent)
 
 else()

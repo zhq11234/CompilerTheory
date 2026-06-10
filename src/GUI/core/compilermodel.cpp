@@ -39,6 +39,7 @@ std::string CompilerModel::sourceDir() const { return sourceDir_; }
 
 void CompilerModel::loadTokens(const std::string& jsonPath)
 {
+	emit stepStarted(QStringLiteral("Lexer"));
 	auto future = QtConcurrent::run(&CompilerModel::parseTokensJson,
 	                                QString::fromStdString(jsonPath));
 	tokenWatcher.setFuture(future);
@@ -46,6 +47,7 @@ void CompilerModel::loadTokens(const std::string& jsonPath)
 
 void CompilerModel::loadAST(const std::string& jsonPath)
 {
+	emit stepStarted(QStringLiteral("Parser"));
 	auto future = QtConcurrent::run(&CompilerModel::parseASTJson,
 	                                QString::fromStdString(jsonPath));
 	astWatcher.setFuture(future);
@@ -53,6 +55,7 @@ void CompilerModel::loadAST(const std::string& jsonPath)
 
 void CompilerModel::loadSemantic(const std::string& jsonPath)
 {
+	emit stepStarted(QStringLiteral("Semantic"));
 	auto future = QtConcurrent::run(&CompilerModel::parseSemanticJson,
 	                                QString::fromStdString(jsonPath));
 	semanticWatcher.setFuture(future);
@@ -60,6 +63,7 @@ void CompilerModel::loadSemantic(const std::string& jsonPath)
 
 void CompilerModel::loadIR(const std::string& jsonPath)
 {
+	emit stepStarted(QStringLiteral("IR"));
 	auto future = QtConcurrent::run(&CompilerModel::parseIRJson,
 	                                QString::fromStdString(jsonPath));
 	irWatcher.setFuture(future);
@@ -82,10 +86,13 @@ void CompilerModel::onTokensFinished()
 	const auto& payload = tokenWatcher.result();
 	tokens = payload.tokens;
 	lexerErrors = payload.errors;
+	tokenSource = payload.source;
+	tokenTimestamp = payload.timestamp;
 	std::ostringstream oss;
 	oss << "From " << payload.source << " loaded " << tokens.size() << " tokens";
 	parserLog = oss.str();
 	emit tokensLoaded();
+	emit stepFinished(QStringLiteral("Lexer"));
 	emit anyStepDone("Lexer");
 }
 
@@ -98,10 +105,13 @@ void CompilerModel::onASTFinished()
 	astOwned.reset(payload.root);
 	astRoot = astOwned.get();
 	parserErrors = payload.errors;
+	astSource = payload.source;
+	astTimestamp = payload.timestamp;
 	std::ostringstream oss;
 	oss << "From " << payload.source << " loaded AST";
 	parserLog = oss.str();
 	emit astLoaded();
+	emit stepFinished(QStringLiteral("Parser"));
 	emit anyStepDone("Parser");
 }
 
@@ -110,9 +120,12 @@ void CompilerModel::onSemanticFinished()
 	const auto& payload = semanticWatcher.result();
 	symtab = SymTab{};
 	for (const auto& s : payload.symbols)
-		symtab.insert(s.name, s.type, s.line);
+		symtab.insert(s.name, s.type, s.scope, s.line);
 	semanticErrors = payload.errors;
+	semanticSource = payload.source;
+	semanticTimestamp = payload.timestamp;
 	emit semanticLoaded();
+	emit stepFinished(QStringLiteral("Semantic"));
 	emit anyStepDone("Semantic");
 }
 
@@ -121,7 +134,10 @@ void CompilerModel::onIRFinished()
 	const auto& payload = irWatcher.result();
 	quads = payload.quads;
 	irErrors = payload.errors;
+	irSource = payload.source;
+	irTimestamp = payload.timestamp;
 	emit irLoaded();
+	emit stepFinished(QStringLiteral("IR"));
 	emit anyStepDone("IR");
 }
 
@@ -129,38 +145,38 @@ void CompilerModel::onIRFinished()
 //  static JSON parsers  (worker thread via QtConcurrent)
 // =====================================================================
 
-CompilerModel::TokenPayload CompilerModel::parseTokensJson(const QString& path)
+namespace {
+
+std::optional<QJsonObject> openAndParseJson(const QString& path, QString& errorOut)
 {
-	TokenPayload out;
 	QFile f(path);
-	if (!f.open(QIODevice::ReadOnly)) return out;
-
-	QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
-	QJsonObject root = doc.object();
-	out.source    = root["source"].toString().toStdString();
-	out.timestamp = root["timestamp"].toString().toStdString();
-
-	const QJsonArray arr = root["tokens"].toArray();
-	for (const auto v : arr) {
-		QJsonObject o = v.toObject();
-		Token t;
-		t.type  = o["type"].toInt();
-		t.value = o["value"].toString().toStdString();
-		t.line  = o["line"].toInt();
-		out.tokens.push_back(std::move(t));
+	if (!f.open(QIODevice::ReadOnly)) {
+		errorOut = QStringLiteral("Failed to open: ") + path;
+		return std::nullopt;
 	}
-	for (const auto v : root["errors"].toArray())
-		out.errors.push_back(v.toString().toStdString());
-
-	return out;
+	QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+	if (doc.isNull()) {
+		errorOut = QStringLiteral("Invalid JSON: ") + path;
+		return std::nullopt;
+	}
+	return doc.object();
 }
 
-namespace {
+void extractMetaAndErrors(const QJsonObject& root,
+                          std::string& source, std::string& timestamp,
+                          std::vector<std::string>& errors)
+{
+	source    = root["source"].toString().toStdString();
+	timestamp = root["timestamp"].toString().toStdString();
+	for (const auto v : root["errors"].toArray())
+		errors.push_back(v.toString().toStdString());
+}
+
 ASTNode* buildNode(const QJsonObject& obj, std::vector<Token*>& pool)
 {
 	if (obj.isEmpty()) return nullptr;
 
-	auto* node = new ASTNode;
+	auto* node = new ASTNode{};
 	std::string typeStr = obj["type"].toString().toStdString();
 
 	if (typeStr == "NODE_IF") {
@@ -181,7 +197,7 @@ ASTNode* buildNode(const QJsonObject& obj, std::vector<Token*>& pool)
 	} else if (typeStr == "NODE_ID") {
 		node->type = NODE_ID;
 		auto* tok = new Token;
-		tok->type  = 2;
+		tok->type  = TOKEN_IDENTIFIER;
 		tok->value = obj["value"].toString().toStdString();
 		tok->line  = obj["line"].toInt();
 		node->token = tok;
@@ -189,7 +205,7 @@ ASTNode* buildNode(const QJsonObject& obj, std::vector<Token*>& pool)
 	} else if (typeStr == "NODE_NUM") {
 		node->type = NODE_NUM;
 		auto* tok = new Token;
-		tok->type  = 3;
+		tok->type  = TOKEN_NUMBER;
 		tok->value = obj["value"].toString().toStdString();
 		tok->line  = obj["line"].toInt();
 		node->token = tok;
@@ -199,35 +215,47 @@ ASTNode* buildNode(const QJsonObject& obj, std::vector<Token*>& pool)
 }
 } // anonymous namespace
 
+CompilerModel::TokenPayload CompilerModel::parseTokensJson(const QString& path)
+{
+	TokenPayload out;
+	QString error;
+	auto rootOpt = openAndParseJson(path, error);
+	if (!rootOpt) { out.errors.push_back(error.toStdString()); return out; }
+	extractMetaAndErrors(*rootOpt, out.source, out.timestamp, out.errors);
+
+	const QJsonArray arr = rootOpt->value("tokens").toArray();
+	for (const auto v : arr) {
+		QJsonObject o = v.toObject();
+		Token t;
+		t.type  = o["type"].toInt();
+		t.value = o["value"].toString().toStdString();
+		t.line  = o["line"].toInt();
+		out.tokens.push_back(std::move(t));
+	}
+	return out;
+}
+
 CompilerModel::ASTPayload CompilerModel::parseASTJson(const QString& path)
 {
 	ASTPayload out;
-	QFile f(path);
-	if (!f.open(QIODevice::ReadOnly)) return out;
+	QString error;
+	auto rootOpt = openAndParseJson(path, error);
+	if (!rootOpt) { out.errors.push_back(error.toStdString()); return out; }
+	extractMetaAndErrors(*rootOpt, out.source, out.timestamp, out.errors);
 
-	QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
-	QJsonObject root = doc.object();
-	out.source    = root["source"].toString().toStdString();
-	out.timestamp = root["timestamp"].toString().toStdString();
-	out.root = buildNode(root["ast"].toObject(), out.tokenPtrs);
-	for (const auto v : root["errors"].toArray())
-		out.errors.push_back(v.toString().toStdString());
-
+	out.root = buildNode(rootOpt->value("ast").toObject(), out.tokenPtrs);
 	return out;
 }
 
 CompilerModel::SemanticPayload CompilerModel::parseSemanticJson(const QString& path)
 {
 	SemanticPayload out;
-	QFile f(path);
-	if (!f.open(QIODevice::ReadOnly)) return out;
+	QString error;
+	auto rootOpt = openAndParseJson(path, error);
+	if (!rootOpt) { out.errors.push_back(error.toStdString()); return out; }
+	extractMetaAndErrors(*rootOpt, out.source, out.timestamp, out.errors);
 
-	QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
-	QJsonObject root = doc.object();
-	out.source    = root["source"].toString().toStdString();
-	out.timestamp = root["timestamp"].toString().toStdString();
-
-	const QJsonArray syms = root["symtab"].toArray();
+	const QJsonArray syms = rootOpt->value("symtab").toArray();
 	for (const auto v : syms) {
 		QJsonObject o = v.toObject();
 		Symbol s;
@@ -237,24 +265,18 @@ CompilerModel::SemanticPayload CompilerModel::parseSemanticJson(const QString& p
 		s.line  = o["line"].toInt();
 		out.symbols.push_back(s);
 	}
-	for (const auto v : root["errors"].toArray())
-		out.errors.push_back(v.toString().toStdString());
-
 	return out;
 }
 
 CompilerModel::IRPayload CompilerModel::parseIRJson(const QString& path)
 {
 	IRPayload out;
-	QFile f(path);
-	if (!f.open(QIODevice::ReadOnly)) return out;
+	QString error;
+	auto rootOpt = openAndParseJson(path, error);
+	if (!rootOpt) { out.errors.push_back(error.toStdString()); return out; }
+	extractMetaAndErrors(*rootOpt, out.source, out.timestamp, out.errors);
 
-	QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
-	QJsonObject root = doc.object();
-	out.source    = root["source"].toString().toStdString();
-	out.timestamp = root["timestamp"].toString().toStdString();
-
-	const QJsonArray arr = root["quads"].toArray();
+	const QJsonArray arr = rootOpt->value("quads").toArray();
 	for (const auto v : arr) {
 		QJsonObject o = v.toObject();
 		Quadruple q;
@@ -264,8 +286,5 @@ CompilerModel::IRPayload CompilerModel::parseIRJson(const QString& path)
 		q.result = o["result"].toString().toStdString();
 		out.quads.push_back(q);
 	}
-	for (const auto v : root["errors"].toArray())
-		out.errors.push_back(v.toString().toStdString());
-
 	return out;
 }
