@@ -3,12 +3,30 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
+#include <ctime>
+
+
+// 生成 ISO 8601 时间戳字符串
+static std::string getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm bt;
+#if defined(_WIN32)
+    localtime_s(&bt, &in_time_t);
+#else
+    localtime_r(&in_time_t, &bt);
+#endif
+    std::ostringstream oss;
+    oss << std::put_time(&bt, "%Y-%m-%dT%H:%M:%S");
+    return oss.str();
+}
 
 // Helper functions
 static bool isKeyword(const std::string& s) {
     static const char* keywords[] = {
-        "const", "var", "procedure", "begin", "end", "odd",
-        "if", "then", "call", "while", "do", "read", "write"
+       "const", "var", "procedure", "begin", "end", "odd",
+       "if", "then", "else", "call", "while", "do", "read", "write"
     };
     for (int i = 0; i < 13; ++i)
         if (s == keywords[i]) return true;
@@ -249,32 +267,31 @@ std::vector<Token> Lexer::analyze(const std::string& src) {
 // 辅助函数：根据 type 和 value 生成描述字符串
 static std::string tokenDescription(const Token& tok) {
     if (tok.type == 0) {
-        // 错误类型判断（模仿原 C 的错误消息）
-        if (tok.value.empty()) return "结束符";
+        if (tok.value.empty()) return "EOF";
         // 数字超长
         if (tok.value.size() > 8 && std::isdigit(tok.value[0])) {
             bool allDigit = true;
             for (char ch : tok.value) if (!std::isdigit(ch)) { allDigit = false; break; }
-            if (allDigit) return "数字超长(>8)";
+            if (allDigit) return "Number too long (>8 digits)";
         }
         // 标识符超长
         if (tok.value.size() > 8 && std::isalpha(tok.value[0])) {
-            return "标识符超长(>8)";
+            return "Identifier too long (>8 chars)";
         }
         // 非法单词（数字+字母混合）
         if (!tok.value.empty() && std::isdigit(tok.value[0])) {
-            for (char ch : tok.value) if (std::isalpha(ch)) return "非法单词";
+            for (char ch : tok.value) if (std::isalpha(ch)) return "Illegal word (digit+letter)";
         }
         // 非法字符
-        return "非法字符";
+        return "Illegal character";
     }
     switch (tok.type) {
-    case 1: return "关键字";
-    case 2: return "标识符";
-    case 3: return "无符号整数";
-    case 4: return "运算符";
-    case 5: return "界符";
-    default: return "未知";
+    case 1: return "Keyword";
+    case 2: return "Identifier";
+    case 3: return "Number";
+    case 4: return "Operator";
+    case 5: return "Delimiter";
+    default: return "Unknown";
     }
 }
 
@@ -323,28 +340,60 @@ static std::string tokenTypeToString(int type) {
     }
 }
 
-// JSON 输出方法
-void Lexer::writeTokensToJSON(const std::vector<Token>& tokens, const std::string& filename) {
-    std::ofstream out(filename);
+void Lexer::writeTokensToJSON(const std::vector<Token>& tokens,
+    const std::string& filename,
+    const std::string& sourceName) {
+    std::ofstream out(filename, std::ios::binary);  // 二进制模式避免换行转换
     if (!out.is_open()) {
         std::cerr << "Error: cannot open file " << filename << " for writing.\n";
         return;
     }
 
-    out << "[\n";
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        const Token& tok = tokens[i];
-        // 跳过 EOF 标记（type 0 且 value 为空）
-        if (tok.type == 0 && tok.value.empty()) continue;
+    // 分离正确 token 和错误 token
+    std::vector<Token> goodTokens;
+    std::vector<Token> errorTokens;
 
-        out << "  {\n";
-        out << "    \"type\": \"" << tokenTypeToString(tok.type) << "\",\n";
-        out << "    \"lexeme\": \"" << escape_json(tok.value) << "\",\n";
-        out << "    \"line\": " << tok.line << "\n";
-        out << "  }";
-        if (i != tokens.size() - 1) out << ",";
+    for (const auto& tok : tokens) {
+        if (tok.type == 0 && tok.value.empty()) continue; // 跳过 EOF
+        if (tok.type == 0)
+            errorTokens.push_back(tok);
+        else
+            goodTokens.push_back(tok);
+    }
+
+    out << "{\n";
+    out << "  \"source\": \"" << escape_json(sourceName) << "\",\n";
+    out << "  \"timestamp\": \"" << getCurrentTimestamp() << "\",\n";
+
+    // tokens 数组
+    out << "  \"tokens\": [\n";
+    for (size_t i = 0; i < goodTokens.size(); ++i) {
+        const Token& tok = goodTokens[i];
+        out << "    {";
+        out << "\"type\": " << tok.type << ", ";
+        out << "\"value\": \"" << escape_json(tok.value) << "\", ";
+        out << "\"line\": " << tok.line;
+        out << "}";
+        if (i != goodTokens.size() - 1) out << ",";
         out << "\n";
     }
-    out << "]\n";
+    out << "  ],\n";
+
+    // errors 数组
+    out << "  \"errors\": [\n";
+    for (size_t i = 0; i < errorTokens.size(); ++i) {
+        const Token& tok = errorTokens[i];
+        std::string errMsg = tokenDescription(tok);   // 获得详细错误描述
+        out << "    {";
+        out << "\"line\": " << tok.line << ", ";
+        out << "\"lexeme\": \"" << escape_json(tok.value) << "\", ";
+        out << "\"message\": \"" << escape_json(errMsg) << "\"";
+        out << "}";
+        if (i != errorTokens.size() - 1) out << ",";
+        out << "\n";
+    }
+    out << "  ]\n";
+    out << "}\n";
+
     out.close();
 }

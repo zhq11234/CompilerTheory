@@ -1,24 +1,60 @@
 ﻿#include "lexer.h"
+#include "parser.h"
 #include <iostream>
+#include <fstream>
 #include <string>
 using namespace std;
 
-int main() {
-    string source =
-        "const var1 := 123456789;\n"
-        "// 这是单行注释\n"
-        "/* 块注释\n"
-        "   多行 */\n"
-        "if a123 <= b then\n"
-        "    call proc( x, y );\n"
-        "odd 999999999\n"
-        "  while # do\n"
-        "  123abc illegal\n"
-        "  @ invalid\n"
-        "  longid\n";  // 标识符超长测试
+// 递归释放 AST 节点（防止内存泄漏）
+void deleteAST(ASTNode* node) {
+    if (!node) return;
+    deleteAST(node->left);
+    deleteAST(node->right);
+    deleteAST(node->thenBranch);
+    deleteAST(node->elseBranch);
+    if (node->token) delete node->token;
+    delete node;
+}
 
+int main() {
+    // 1. 准备测试源码（符合文法）
+    std::string sourceCode =
+        "if a > b then a = 10 else b < 10";
+
+    std::cout << "========== 源代码 ==========\n";
+    std::cout << sourceCode << "\n\n";
+
+    // 2. 词法分析
     Lexer lexer;
-    vector<Token> tokens = lexer.analyze(source);
-    lexer.writeTokensToJSON(tokens, "E:/BIANYIYUANLI/test/test_tokens.json");
+    std::vector<Token> tokens = lexer.analyze(sourceCode);
+
+    std::cout << "========== Token 流 ==========\n";
+    lexer.printTokens(tokens, std::cout);
+    std::cout << "\n";
+
+    // 3. 语法分析
+    Parser parser;
+    ASTNode* root = parser.parse(tokens);
+
+    // 4. 输出结果
+    if (root) {
+        std::cout << "========== 语法分析成功 ==========\n";
+        std::cout << "========== 抽象语法树 (AST) ==========\n";
+        parser.printAST(root, std::cout);
+
+        std::cout << "\n========== 分析过程日志 ==========\n";
+        std::cout << parser.getProcessLog();
+
+        // 释放 AST 内存
+        deleteAST(root);
+    }
+    else {
+        std::cout << "========== 语法分析失败 ==========\n";
+        std::vector<std::string> errors = parser.getErrors();
+        for (const auto& err : errors) {
+            std::cerr << "[ERROR] " << err << std::endl;
+        }
+    }
+
     return 0;
 }

@@ -12,7 +12,10 @@ public:
 	Lexer();
 	std::vector<Token> analyze(const std::string& source);  // 主接口：源码 → Token流
 	void printTokens(const std::vector<Token>& tokens, std::ostream& out);  // 输出Token流
-	void writeTokensToJSON(const std::vector<Token>& tokens, const std::string& filename);
+	// lexer.h
+	void writeTokensToJSON(const std::vector<Token>& tokens,
+		const std::string& filename,
+		const std::string& sourceName);
 private:
 	int line;       // 当前行号
 	int pos;        // 当前字符位置
