@@ -40,8 +40,11 @@ static std::string escapeJSON(const std::string& s) {
 static void writeJSONToFile(const std::string& filename, SymTab& symtab,
     const std::vector<std::string>& errors) {
     std::ofstream out(filename);
-    if (!out.is_open()) return;
-
+    if (!out.is_open())
+    {
+        std::cout << "文件路径不存在！\n";
+        return;
+    }
     out << "{\n";
     out << "  \"source\": \"source.src\",\n";
     out << "  \"timestamp\": \"" << getCurrentISO8601Time() << "\",\n";
@@ -81,7 +84,7 @@ void SemanticAnalyzer::analyze(ASTNode* ast, SymTab& symtab, const std::string& 
         checkNode(ast, symtab);
     }
     // 调用静态函数输出 JSON
-    writeJSONToFile("srcPath/test_semantic.json", symtab, errors);
+    writeJSONToFile(srcPath+"/test_semantic.json", symtab, errors);
 }
 
 // 获取错误列表
