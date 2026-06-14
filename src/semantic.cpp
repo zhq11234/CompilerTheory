@@ -1,4 +1,3 @@
-// semantic.cpp
 #include "semantic.h"
 #include "symtab.h"
 #include <iostream>
@@ -141,8 +140,8 @@ void SemanticAnalyzer::checkCondExpr(ASTNode* node, SymTab& symtab) {
         }
     }
     else {
-        errors.push_back("行 " + std::to_string(node->token ? node->token->line : 0) +
-            ": 条件表达式左边不是标识符");
+        errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
+            ": Left operand of condition expression is not an identifier");
     }
 
     if (rightId && rightId->type == NODE_ID) {
@@ -152,8 +151,8 @@ void SemanticAnalyzer::checkCondExpr(ASTNode* node, SymTab& symtab) {
         }
     }
     else {
-        errors.push_back("行 " + std::to_string(node->token ? node->token->line : 0) +
-            ": 条件表达式右边不是标识符");
+        errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
+            ": Right operand of condition expression is not an identifier");
     }
 }
 
@@ -163,7 +162,7 @@ void SemanticAnalyzer::checkAssignExpr(ASTNode* node, SymTab& symtab) {
     ASTNode* rightNum = node->right;
 
     bool isAssign = (node->op == "=");
-    std::string stmtType = isAssign ? "赋值语句" : "比较语句";
+    std::string stmtType = isAssign ? "Assignment" : "Comparison";
 
     if (leftId && leftId->type == NODE_ID) {
         std::string name = leftId->token->value;
@@ -172,20 +171,20 @@ void SemanticAnalyzer::checkAssignExpr(ASTNode* node, SymTab& symtab) {
         }
     }
     else {
-        errors.push_back("行 " + std::to_string(node->token ? node->token->line : 0) +
-            ": " + stmtType + "左边不是标识符");
+        errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
+            ": " + stmtType + "left operand is not an identifier");
     }
 
     if (rightNum && rightNum->type == NODE_NUM) {
         // 正确
     }
     else {
-        errors.push_back("行 " + std::to_string(node->token ? node->token->line : 0) +
-            ": " + stmtType + "右边不是整数常量");
+        errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
+            ": " + stmtType + "right operand is not an integer constant");
     }
 
     if (node->op != "=" && node->op != ">" && node->op != "<") {
-        errors.push_back("行 " + std::to_string(node->token ? node->token->line : 0) +
-            ": " + stmtType + "存在未知的操作符 '" + node->op + "'");
+        errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
+            ": " + stmtType + "has unknown operator '" + node->op + "'");
     }
 }
