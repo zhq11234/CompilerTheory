@@ -5,8 +5,9 @@
 #include <map>
 #include <stack>
 
-// ���ű�ţ��ڲ�ʹ�ã���ʷ�����������޹أ�
-enum Symbol {
+<<<<<< < HEAD
+	// ���ű�ţ��ڲ�ʹ�ã���ʷ�����������޹أ�
+	enum Symbol {
 	// �ս��
 	const int IF = 1;
 const int THEN = 2;
@@ -28,6 +29,32 @@ const int N = 104;
 //��2��  LRAnalysisTable��LR(1)�������
 //�ļ�	parser.h / parser.cpp
 //ְ��	���첢�洢 LR(1) Action ��� Goto ����ṩ���ӿ�
+====== =
+// parser.h
+// ���ű�ţ��ڲ�ʹ�ã���ʷ�����������޹أ�111
+enum Symbol {
+	// �ս��
+	IF = 1,
+	THEN = 2,
+	ELSE = 3,
+	ID = 4,
+	NUM = 5,
+	GT = 6,     // '>'
+	EQ = 7,     // '='
+	LT = 8,     // '<'
+	EOF_ = 9,   // '#'
+	// ���ս��
+	S1 = 100,   // S'
+	S = 101,
+	E = 102,
+	P = 103,
+	N = 104
+};
+
+//��2��  LRAnalysisTable��LR(1)�������
+//�ļ�	parser.h / parser.cpp
+//ְ��	���첢�洢 LR(1) Action ��� Goto ����ṩ���ӿ�
+>>>>>> > origin / master
 class LRAnalysisTable {
 public:
 	LRAnalysisTable();
