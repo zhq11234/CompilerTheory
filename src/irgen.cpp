@@ -118,12 +118,8 @@ void IRGenerator::genIfElse(ASTNode* node, std::vector<Quadruple>& quads, SymTab
 
     // 4. 生成 then 分支
     if (thenStmt) {
-        /*if (thenStmt->type == NODE_ASSIGN)
+        if (thenStmt->type == NODE_ASSIGN)
             genAssign(thenStmt, quads, symtab);
-        else if (thenStmt->type == NODE_IF)
-            genIfElse(thenStmt, quads, symtab);*/
-        if (thenStmt->type == NODE_COND)
-            genCond(thenStmt, quads, trueLabel, falseLabel, symtab);
     }
     quads.push_back({ "j", "", "", endLabel });
 
@@ -132,12 +128,8 @@ void IRGenerator::genIfElse(ASTNode* node, std::vector<Quadruple>& quads, SymTab
 
     // 6. 生成 else 分支
     if (elseStmt) {
-        /*if (elseStmt->type == NODE_ASSIGN)
+        if (elseStmt->type == NODE_ASSIGN)
             genAssign(elseStmt, quads, symtab);
-        else if (elseStmt->type == NODE_IF)
-            genIfElse(elseStmt, quads, symtab);*/
-        if (thenStmt->type == NODE_COND)
-            genCond(thenStmt, quads, trueLabel, falseLabel, symtab);
     }
 
     // 7. 记录 endLabel 指向整个 if-else 结束后的位置（即当前 quads 大小）
@@ -147,7 +139,7 @@ void IRGenerator::genIfElse(ASTNode* node, std::vector<Quadruple>& quads, SymTab
 void IRGenerator::genCond(ASTNode* node, std::vector<Quadruple>& quads,
     std::string trueLabel, std::string falseLabel, SymTab& symtab) {
     /*(void)falseLabel;*/
-    /*if (node->type != NODE_COND) return;*/
+    if (node->type != NODE_COND) return;
     std::string left = node->left->token->value;
     std::string right = node->right->token->value;
     std::string op = node->op;
@@ -157,10 +149,10 @@ void IRGenerator::genCond(ASTNode* node, std::vector<Quadruple>& quads,
     else                quads.push_back({ "j=", left, right, trueLabel });
 }
 
-//void IRGenerator::genAssign(ASTNode* node, std::vector<Quadruple>& quads, SymTab& symtab) {
-//    if (node->type != NODE_ASSIGN) return;
-//    if (node->op != "=") return;
-//    std::string left = node->left->token->value;
-//    std::string right = node->right->token->value;
-//    quads.push_back({ "=", right, "", left });
-//}
+void IRGenerator::genAssign(ASTNode* node, std::vector<Quadruple>& quads, SymTab& symtab) {
+    if (node->type != NODE_ASSIGN) return;
+    if (node->op != "=") return;
+    std::string left = node->left->token->value;
+    std::string right = node->right->token->value;
+    quads.push_back({ "=", right, "", left });
+}
