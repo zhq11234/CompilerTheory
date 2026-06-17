@@ -20,7 +20,9 @@ int main(int argc, char* argv[])
 		app.setStyleSheet(QString::fromUtf8(styleFile.readAll()));
 		styleFile.close();
 	}
+
 	MainWindow w;
 	w.show();
+
 	return app.exec();
 }

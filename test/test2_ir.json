@@ -1,0 +1,12 @@
+{
+  "source": "test2.src",
+  "timestamp": "2026-06-11T10:00:03",
+  "quads": [
+    {"op": "j<",  "arg1": "a", "arg2": "5",  "result": "L3"},
+    {"op": "j",   "arg1": "-", "arg2": "-",  "result": "L5"},
+    {"op": "=",   "arg1": "10","arg2": "-",  "result": "b"},
+    {"op": "j",   "arg1": "-", "arg2": "-",  "result": "L7"},
+    {"op": "=",   "arg1": "20","arg2": "-",  "result": "c"}
+  ],
+  "errors": ["line 5: label L7 not defined — dangling jump target"]
+}

@@ -1,0 +1,26 @@
+{
+  "source": "test2.src",
+  "timestamp": "2026-06-11T10:00:01",
+  "ast": {
+    "type": "NODE_IF",
+    "cond": {
+      "type": "NODE_COND",
+      "op": "<",
+      "left":  { "type": "NODE_ID",  "value": "a", "line": 1 },
+      "right": { "type": "NODE_NUM", "value": "5", "line": 1 }
+    },
+    "thenBranch": {
+      "type": "NODE_ASSIGN",
+      "op": "=",
+      "left":  { "type": "NODE_ID",  "value": "b", "line": 2 },
+      "right": { "type": "NODE_NUM", "value": "10", "line": 2 }
+    },
+    "elseBranch": {
+      "type": "NODE_ASSIGN",
+      "op": "=",
+      "left":  { "type": "NODE_ID",  "value": "c", "line": 4 },
+      "right": { "type": "NODE_NUM", "value": "20", "line": 4 }
+    }
+  },
+  "errors": ["line 4: dangling else ambiguity resolved to inner if"]
+}

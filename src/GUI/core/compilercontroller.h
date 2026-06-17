@@ -10,7 +10,7 @@ class CompilerController : public QObject {
 	Q_OBJECT
 public:
 	explicit CompilerController(CompilerModel* model, CompilerView* view,
-		QObject* parent = nullptr);
+	                            QObject* parent = nullptr);
 	void init();
 	void openSpecificFile(const QString& path);
 
@@ -22,6 +22,7 @@ public slots:
 	void handleRunIR();
 	void handleRunAll();
 	void saveSourceFile();
+
 private:
 	CompilerModel* model;
 

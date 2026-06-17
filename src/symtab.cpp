@@ -10,7 +10,7 @@ bool SymTab::insert(const std::string& name, const std::string& type, int scope,
 	return true;
 }
 
-Symbol* SymTab::lookup(const std::string& name)
+symbol_enum_symbol* SymTab::lookup(const std::string& name)
 {
 	for (auto& s : table)
 		if (s.name == name) return &s;
@@ -22,7 +22,7 @@ bool SymTab::isDeclared(const std::string& name)
 	return lookup(name) != nullptr;
 }
 
-std::vector<Symbol> SymTab::getAllSymbols()
+std::vector<symbol_enum_symbol> SymTab::getAllSymbols()
 {
 	return table;
 }

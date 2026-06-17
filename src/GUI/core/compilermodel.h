@@ -1,6 +1,7 @@
 ﻿#ifndef COMPILERMODEL_H
 #define COMPILERMODEL_H
 
+#include <QObject>
 #include <QFutureWatcher>
 #include <string>
 #include <vector>
@@ -82,7 +83,7 @@ private:
 	struct SemanticPayload {
 		std::string source;
 		std::string timestamp;
-		std::vector<Symbol> symbols;
+		std::vector<symbol_enum_symbol> symbols;
 		std::vector<std::string> errors;
 	};
 	struct IRPayload {
@@ -100,7 +101,7 @@ private:
 	struct CompileResult {
 		std::vector<Token> tokens;
 		std::unique_ptr<ASTNode> astRoot;
-		std::vector<Symbol> symbols;
+		std::vector<symbol_enum_symbol> symbols;
 		std::vector<Quadruple> quads;
 		std::vector<std::string> lexerErrors;
 		std::vector<std::string> parserErrors;

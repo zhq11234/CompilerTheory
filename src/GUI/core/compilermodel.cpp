@@ -1,4 +1,8 @@
 ﻿#include "compilermodel.h"
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QtConcurrent/QtConcurrent>
 #include <sstream>
 

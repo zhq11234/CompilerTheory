@@ -10,7 +10,7 @@
 #include "irgen.h"
 
 CompilerController::CompilerController(CompilerModel* m, CompilerView* v,
-	QObject* parent)
+                                       QObject* parent)
 	: QObject(parent), model(m), view(v)
 {
 }
@@ -18,46 +18,46 @@ CompilerController::CompilerController(CompilerModel* m, CompilerView* v,
 void CompilerController::init()
 {
 	connect(view->actionOpenFile(), &QAction::triggered,
-		this, &CompilerController::handleOpenFile);
+	        this, &CompilerController::handleOpenFile);
 	connect(view->actionRunLexer(), &QAction::triggered,
-		this, &CompilerController::handleRunLexer);
+	        this, &CompilerController::handleRunLexer);
 	connect(view->actionRunParser(), &QAction::triggered,
-		this, &CompilerController::handleRunParser);
+	        this, &CompilerController::handleRunParser);
 	connect(view->actionRunSemantic(), &QAction::triggered,
-		this, &CompilerController::handleRunSemantic);
+	        this, &CompilerController::handleRunSemantic);
 	connect(view->actionRunIR(), &QAction::triggered,
-		this, &CompilerController::handleRunIR);
+	        this, &CompilerController::handleRunIR);
 	connect(view->actionRunAll(), &QAction::triggered,
-		this, &CompilerController::handleRunAll);
+	        this, &CompilerController::handleRunAll);
 
 	connect(model, &CompilerModel::tokensLoaded, this, [this]() {
 		view->showTokens(model->getTokens());
 		view->setStageErrors("Lexer", model->getLexerErrors());
 		view->appendLog("[OK] Token stream loaded (" +
-			std::to_string(model->getTokens().size()) + " tokens)");
-		});
+		                std::to_string(model->getTokens().size()) + " tokens)");
+	});
 	connect(model, &CompilerModel::astLoaded, this, [this]() {
 		view->showAST(model->getAST());
 		view->setStageErrors("Parser", model->getParserErrors());
 		view->appendLog("[OK] AST loaded");
-		});
+	});
 	connect(model, &CompilerModel::semanticLoaded, this, [this]() {
 		view->showSymTab(model->getSymTab());
 		view->setStageErrors("Semantic", model->getSemanticErrors());
 		view->appendLog("[OK] Semantic analysis loaded");
-		});
+	});
 	connect(model, &CompilerModel::irLoaded, this, [this]() {
 		view->showQuads(model->getQuads());
 		view->setStageErrors("IR", model->getIRErrors());
 		view->appendLog("[OK] IR loaded (" +
-			std::to_string(model->getQuads().size()) + " quads)");
-		});
+		                std::to_string(model->getQuads().size()) + " quads)");
+	});
 	connect(model, &CompilerModel::anyStepDone, this, [this](const std::string& step) {
 		view->appendLog("[Done] " + step);
-		});
+	});
 	connect(model, &CompilerModel::stepStarted, this, [this](const QString& step) {
 		view->appendLog("[Loading] " + step.toStdString() + "...");
-		});
+	});
 }
 
 void CompilerController::derivePaths(const std::string& srcPath)
@@ -69,7 +69,7 @@ void CompilerController::derivePaths(const std::string& srcPath)
 	auto makePath = [&](const std::string& suffix) -> std::string {
 		QDir d(QString::fromStdString(baseDir));
 		return d.filePath(QString::fromStdString(baseName + suffix)).toStdString();
-		};
+	};
 	pathTokens = makePath("_tokens.json");
 	pathAST = makePath("_ast.json");
 	pathSemantic = makePath("_semantic.json");
@@ -103,7 +103,7 @@ void CompilerController::handleOpenFile()
 {
 	QString filter = QStringLiteral("Source files (*.src);;All files (*)");
 	QString path = QFileDialog::getOpenFileName(view,
-		QStringLiteral("Open source file"), QString(), filter);
+	              QStringLiteral("Open source file"), QString(), filter);
 	if (path.isEmpty()) return;
 	openSpecificFile(path);
 }
@@ -191,7 +191,7 @@ void CompilerController::saveSourceFile()
 {
 	if (baseDir.empty() || baseName.empty()) return;
 	QString srcPath = QDir(QString::fromStdString(baseDir))
-		.filePath(QString::fromStdString(baseName + ".src"));
+	                  .filePath(QString::fromStdString(baseName + ".src"));
 	QFile f(srcPath);
 	if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
 		QTextStream out(&f);
@@ -209,7 +209,7 @@ void CompilerController::handleRunAll()
 	std::string srcPath = sourceFilePath();
 	std::string source = view->getSourceText();
 
-	// 先调用编译器组件生成 JSON 文件
+	// �ȵ��ñ������������ JSON �ļ�
 	Lexer lexer;
 	auto tokens = lexer.analyze(source, srcPath);
 
@@ -223,7 +223,7 @@ void CompilerController::handleRunAll()
 	IRGenerator irgen;
 	irgen.generate(ast, symtab, srcPath);
 
-	// 再从 JSON 文件加载结果
+	// �ٴ� JSON �ļ����ؽ��
 	if (!pathTokens.empty())   model->loadTokens(pathTokens);
 	if (!pathAST.empty())      model->loadAST(pathAST);
 	if (!pathSemantic.empty()) model->loadSemantic(pathSemantic);
