@@ -28,7 +28,7 @@ static bool isKeyword(const std::string& s) {
        "const", "var", "procedure", "begin", "end", "odd",
        "if", "then", "else", "call", "while", "do", "read", "write"
     };
-    for (int i = 0; i < 13; ++i)
+    for (int i = 0; i < 14; ++i)
         if (s == keywords[i]) return true;
     return false;
 }
@@ -251,56 +251,29 @@ Token Lexer::scanToken() {
     return tok;
 }
 
-std::vector<Token> Lexer::analyze(const std::string& src) {
+std::vector<Token> Lexer::analyze(const std::string& src, const std::string& srcPath) {
     source = src;
     pos = 0;
     line = 1;
+
+    // 从 srcPath 中提取文件名（去掉路径）
+    size_t lastSlash = srcPath.find_last_of("/\\");
+    if (lastSlash != std::string::npos)
+        sourceName = srcPath.substr(lastSlash + 1);
+    else
+        sourceName = srcPath;
+
     std::vector<Token> tokens;
     while (true) {
         Token t = scanToken();
-        if (t.type == 0 && t.value.empty()) break; // EOF
+        if (t.type == 0 && t.value.empty()) break;
         tokens.push_back(t);
     }
     return tokens;
 }
 
-// 辅助函数：根据 type 和 value 生成描述字符串
-static std::string tokenDescription(const Token& tok) {
-    if (tok.type == 0) {
-        if (tok.value.empty()) return "EOF";
-        // 数字超长
-        if (tok.value.size() > 8 && std::isdigit(tok.value[0])) {
-            bool allDigit = true;
-            for (char ch : tok.value) if (!std::isdigit(ch)) { allDigit = false; break; }
-            if (allDigit) return "Number too long (>8 digits)";
-        }
-        // 标识符超长
-        if (tok.value.size() > 8 && std::isalpha(tok.value[0])) {
-            return "Identifier too long (>8 chars)";
-        }
-        // 非法单词（数字+字母混合）
-        if (!tok.value.empty() && std::isdigit(tok.value[0])) {
-            for (char ch : tok.value) if (std::isalpha(ch)) return "Illegal word (digit+letter)";
-        }
-        // 非法字符
-        return "Illegal character";
-    }
-    switch (tok.type) {
-    case 1: return "Keyword";
-    case 2: return "Identifier";
-    case 3: return "Number";
-    case 4: return "Operator";
-    case 5: return "Delimiter";
-    default: return "Unknown";
-    }
-}
 
-void Lexer::printTokens(const std::vector<Token>& tokens, std::ostream& out) {
-    for (const auto& tok : tokens) {
-        std::string desc = tokenDescription(tok);  // 先存储为 string
-        out << "( " << tok.value << " , " << desc << " )\n";
-    }
-}
+
 
 
 // 辅助函数：转义 JSON 字符串中的双引号和反斜杠
@@ -327,34 +300,43 @@ static std::string escape_json(const std::string& s) {
     return oss.str();
 }
 
-// 辅助函数：将 type 编码转换为规范要求的字符串（根据你的文档调整）
-static std::string tokenTypeToString(int type) {
-    switch (type) {
-        case 0: return "ERROR";
-        case 1: return "KEYWORD";
-        case 2: return "IDENTIFIER";
-        case 3: return "NUMBER";
-        case 4: return "OPERATOR";
-        case 5: return "DELIMITER";
-        default: return "UNKNOWN";
+// 错误信息描述（英文版，避免乱码）
+static std::string tokenDescription(const Token& tok) {
+    if (tok.type == 0) {
+        if (tok.value.empty()) return "EOF";
+        if (tok.value.size() > 8 && std::isdigit(tok.value[0])) {
+            bool allDigit = true;
+            for (char ch : tok.value) if (!std::isdigit(ch)) { allDigit = false; break; }
+            if (allDigit) return "Number too long (>8 digits)";
+        }
+        if (tok.value.size() > 8 && std::isalpha(tok.value[0])) {
+            return "Identifier too long (>8 chars)";
+        }
+        if (!tok.value.empty() && std::isdigit(tok.value[0])) {
+            for (char ch : tok.value) if (std::isalpha(ch)) return "Illegal word (digit+letter)";
+        }
+        return "Illegal character";
+    }
+    switch (tok.type) {
+    case 1: return "Keyword";
+    case 2: return "Identifier";
+    case 3: return "Number";
+    case 4: return "Operator";
+    case 5: return "Delimiter";
+    default: return "Unknown";
     }
 }
 
-void Lexer::writeTokensToJSON(const std::vector<Token>& tokens,
-    const std::string& filename,
-    const std::string& sourceName) {
-    std::ofstream out(filename, std::ios::binary);  // 二进制模式避免换行转换
+void Lexer::writeTokensToJSON(const std::vector<Token>& tokens, const std::string& filename) {
+    std::ofstream out(filename, std::ios::binary);
     if (!out.is_open()) {
         std::cerr << "Error: cannot open file " << filename << " for writing.\n";
         return;
     }
 
-    // 分离正确 token 和错误 token
-    std::vector<Token> goodTokens;
-    std::vector<Token> errorTokens;
-
+    std::vector<Token> goodTokens, errorTokens;
     for (const auto& tok : tokens) {
-        if (tok.type == 0 && tok.value.empty()) continue; // 跳过 EOF
+        if (tok.type == 0 && tok.value.empty()) continue;
         if (tok.type == 0)
             errorTokens.push_back(tok);
         else
@@ -365,7 +347,6 @@ void Lexer::writeTokensToJSON(const std::vector<Token>& tokens,
     out << "  \"source\": \"" << escape_json(sourceName) << "\",\n";
     out << "  \"timestamp\": \"" << getCurrentTimestamp() << "\",\n";
 
-    // tokens 数组
     out << "  \"tokens\": [\n";
     for (size_t i = 0; i < goodTokens.size(); ++i) {
         const Token& tok = goodTokens[i];
@@ -379,11 +360,10 @@ void Lexer::writeTokensToJSON(const std::vector<Token>& tokens,
     }
     out << "  ],\n";
 
-    // errors 数组
     out << "  \"errors\": [\n";
     for (size_t i = 0; i < errorTokens.size(); ++i) {
         const Token& tok = errorTokens[i];
-        std::string errMsg = tokenDescription(tok);   // 获得详细错误描述
+        std::string errMsg = tokenDescription(tok);
         out << "    {";
         out << "\"line\": " << tok.line << ", ";
         out << "\"lexeme\": \"" << escape_json(tok.value) << "\", ";
@@ -396,4 +376,12 @@ void Lexer::writeTokensToJSON(const std::vector<Token>& tokens,
     out << "}\n";
 
     out.close();
+}
+
+
+void Lexer::printTokens(const std::vector<Token>& tokens, std::ostream& out) {
+    for (const auto& tok : tokens) {
+        std::string desc = tokenDescription(tok);  // 先存储为 string
+        out << "( " << tok.value << " , " << desc << " )\n";
+    }
 }

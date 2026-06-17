@@ -41,6 +41,7 @@ public:
 	std::vector<std::string> getItemSets() const { return itemSets; };  // 返回项目集规范族（GUI展示用）
 	
 	
+	
 	// 用于 Parser 归约时的辅助数据
 	const std::vector<int>& getRhsLength() const { return rhsLength; }
 	const std::vector<int>& getLhsNonTerminal() const { return lhsNonTerminal; }
@@ -61,6 +62,7 @@ public:
 	std::string getProcessLog()const;  // 获取移进-归约过程日志（GUI状态栈展示用）
 	std::vector<std::string> getErrors()const;  // 获取语法错误列表
 
+	void writeASTToJSON(ASTNode* root, const std::string& filename, const std::string& srcPath);
 private:
 	LRAnalysisTable table;
 	std::stack<int> stateStack;       // 状态栈

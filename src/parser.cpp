@@ -1,12 +1,16 @@
 #include "parser.h"
 #include <sstream>
 #include <cassert>
+#include <fstream>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
+#include <iostream>
 using namespace Symbol;
 
 LRAnalysisTable::LRAnalysisTable() {
     buildTable();
 }
-
 
 
 void LRAnalysisTable::buildTable() {
@@ -33,29 +37,29 @@ void LRAnalysisTable::buildTable() {
     actionTable[{4, LT}] = 9;
     actionTable[{5, ID}] = 11;
     actionTable[{6, ID}] = 12;
-    actionTable[{7, ID}] = -5;   // 归约产生式4 (N->>)
-    actionTable[{8, ID}] = -6;   // 归约产生式5 (N->=)
-    actionTable[{9, ID}] = -7;   // 归约产生式6 (N-><)
+    actionTable[{7, ID}] = -4;   // 归约产生式4 (N->>)
+    actionTable[{8, ID}] = -5;   // 归约产生式5 (N->=)
+    actionTable[{9, ID}] = -6;   // 归约产生式6 (N-><)
     actionTable[{10, ELSE}] = 13;
     actionTable[{11, GT}] = 15;
     actionTable[{11, EQ}] = 16;
     actionTable[{11, LT}] = 17;
-    actionTable[{12, THEN}] = -3; // 归约产生式2 (E->id N id)
+    actionTable[{12, THEN}] = -2; // 归约产生式2 (E->id N id)
     actionTable[{13, ID}] = 19;
     actionTable[{14, NUM}] = 20;
-    actionTable[{15, NUM}] = -5;  // 归约产生式4 (N->>)
-    actionTable[{16, NUM}] = -6;
-    actionTable[{17, NUM}] = -7;
-    actionTable[{18, EOF_}] = -2; // 归约产生式1 (S->...)
+    actionTable[{15, NUM}] = -4;  // 归约产生式4 (N->>)
+    actionTable[{16, NUM}] = -5;
+    actionTable[{17, NUM}] = -6;
+    actionTable[{18, EOF_}] = -1; // 归约产生式1 (S->...)
     actionTable[{19, GT}] = 15;
     actionTable[{19, EQ}] = 16;
     actionTable[{19, LT}] = 17;
-    actionTable[{20, ELSE}] = -4; // 归约产生式3 (P->id N NUM)
+    actionTable[{20, ELSE}] = -3; // 归约产生式3 (P->id N NUM)
     actionTable[{21, NUM}] = 22;
-    actionTable[{22, EOF_}] = -4; // 归约产生式3 (P->id N NUM)
+    actionTable[{22, EOF_}] = -3; // 归约产生式3 (P->id N NUM)
 
     // 接受动作
-    actionTable[{1, EOF_}] = 0;
+    actionTable[{1, EOF_}] = 1000;
 
     // ---- 3. Goto 表 ----
     // (state, nonTerminal) -> nextState
@@ -122,7 +126,7 @@ void LRAnalysisTable::buildTable() {
 int LRAnalysisTable::getAction(int state, int tokenType) const {
     auto it = actionTable.find({ state, tokenType });
     if (it != actionTable.end()) return it->second;
-    return -1; // 出错
+    return -999; // 出错
 }
 
 int LRAnalysisTable::getGoto(int state, int nonTerminal) const {
@@ -194,49 +198,49 @@ ASTNode* Parser::reduce(int prodIdx) {
 
     ASTNode* node = nullptr;
     switch (prodIdx) {
-        case 1: { // S -> if E then P else P
-            node = new ASTNode;
-            node->type = NODE_IF;
-            node->left = children[1];   // E
-            node->right = children[3];  // P1 (then分支)
-            node->elseBranch = children[5]; // P2 (else分支)
-            // 删除占位节点 if, then, else
-            delete children[0];
-            delete children[2];
-            delete children[4];
-            break;
-        }
-        case 2: { // E -> id N id
-            node = new ASTNode;
-            node->type = NODE_ASSIGN;
-            node->left = children[0];
-            node->right = children[2];
-            node->op = children[1]->op;
-            delete children[1];
-            break;
-        }
-        case 3: { // P -> id N NUM
-            node = new ASTNode;
-            node->type = NODE_ASSIGN;
-            node->left = children[0];
-            node->right = children[2];
-            node->op = children[1]->op;
-            delete children[1];
-            break;
-        }
-        case 4: // N -> >
-        case 5: // N -> =
-        case 6: // N -> <
-        {
-            node = new ASTNode;
-            node->type = NODE_ASSIGN;   // 仅用于存储op
-            node->op = children[0]->token->value;
-            node->left = node->right = nullptr;
-            delete children[0];
-            break;
-        }
-        default:
-            assert(false); // 不应发生
+    case 1: { // S -> if E then P else P
+        node = new ASTNode;
+        node->type = NODE_IF;
+        node->left = children[1];   // E
+        node->right = children[3];  // P1 (then分支)
+        node->elseBranch = children[5]; // P2 (else分支)
+        // 删除占位节点 if, then, else
+        delete children[0];
+        delete children[2];
+        delete children[4];
+        break;
+    }
+    case 2: { // E -> id N id
+        node = new ASTNode;
+        node->type = NODE_COND;      // 改为 NODE_COND
+        node->left = children[0];    // id
+        node->right = children[2];   // id
+        node->op = children[1]->op;  // 比较符
+        delete children[1];          // N 节点，仅用于获取 op
+        break;
+    }
+    case 3: { // P -> id N NUM
+        node = new ASTNode;
+        node->type = NODE_COND;      // 改为 NODE_COND
+        node->left = children[0];    // id
+        node->right = children[2];   // NUM
+        node->op = children[1]->op;  // 比较符
+        delete children[1];          // N 节点，仅用于获取 op
+        break;
+    }
+    case 4: // N -> >
+    case 5: // N -> =
+    case 6: // N -> <
+    {
+        node = new ASTNode;
+        node->type = NODE_COND;      // 也改为 NODE_COND（仅用于存储 op）
+        node->op = children[0]->token->value;
+        node->left = node->right = nullptr;
+        delete children[0];
+        break;
+    }
+    default:
+        assert(false); // 不应发生
     }
     return node;
 }
@@ -271,35 +275,7 @@ ASTNode* Parser::parse(const std::vector<Token>& tokens) {
         int state = stateStack.top();
         int action = table.getAction(state, symbol);
         logStep(state, symbol, action, "");
-
-        if (action > 0) { // 移进
-            if (symbol != EOF_) {
-                ASTNode* leaf = createLeafNode(tokens[idx]);
-                nodeStack.push(leaf);
-            }
-            stateStack.push(action);
-            ++idx;
-        }
-        else if (action < 0) { // 归约
-            int prodIdx = -action - 1;
-            int rhsLen = table.getRhsLength()[prodIdx];  ///////
-
-            for (int i = 0; i < rhsLen; ++i)
-                stateStack.pop();
-
-            ASTNode* newNode = reduce(prodIdx);
-            nodeStack.push(newNode);
-
-            int nonTerm = table.getLhsNonTerminal()[prodIdx];
-            int gotoState = table.getGoto(stateStack.top(), nonTerm);
-            if (gotoState == -1) {
-                addError("Goto error: state " + std::to_string(stateStack.top()) +
-                         " non-terminal " + std::to_string(nonTerm));
-                return nullptr;
-            }
-            stateStack.push(gotoState);
-        }
-        else if (action == 0) { // 接受
+        if (action == 1000) {   // 接受
             if (nodeStack.size() == 1)
                 return nodeStack.top();
             else {
@@ -307,9 +283,33 @@ ASTNode* Parser::parse(const std::vector<Token>& tokens) {
                 return nullptr;
             }
         }
-        else { // action == -1 出错
+        else if (action > 0) {   // 移进（正数，不是 1000）
+            if (symbol != EOF_) {
+                ASTNode* leaf = createLeafNode(tokens[idx]);
+                nodeStack.push(leaf);
+            }
+            stateStack.push(action);
+            ++idx;
+        }
+        else if (action <0 && action >= -6) {   // 归约（-1 ~ -6 对应产生式0~6）
+            int prodIdx = -action;   // 因为 action = -prodIdx
+            int rhsLen = table.getRhsLength()[prodIdx];
+            for (int i = 0; i < rhsLen; ++i)
+                stateStack.pop();
+            ASTNode* newNode = reduce(prodIdx);
+            nodeStack.push(newNode);
+            int nonTerm = table.getLhsNonTerminal()[prodIdx];
+            int gotoState = table.getGoto(stateStack.top(), nonTerm);
+            if (gotoState == -1) {
+                addError("Goto error: state " + std::to_string(stateStack.top()) +
+                    " non-terminal " + std::to_string(nonTerm));
+                return nullptr;
+            }
+            stateStack.push(gotoState);
+        }
+        else {   // action == -999 或其他未定义 → 语法错误
             std::string msg = "Syntax error at state " + std::to_string(state) +
-                              ", symbol " + std::to_string(symbol);
+                ", symbol " + std::to_string(symbol);
             if (idx < tokens.size())
                 msg += " (token: " + tokens[idx].value + ")";
             addError(msg);
@@ -368,4 +368,116 @@ std::vector<std::string> Parser::getErrors() const {
 
 void Parser::addError(const std::string& msg) {
     errors.push_back(msg);
+}
+
+
+// ---------- 辅助函数（从 lexer.cpp 复制，保持统一） ----------
+static std::string escape_json(const std::string& s) {
+    std::ostringstream oss;
+    for (char c : s) {
+        switch (c) {
+        case '"':  oss << "\\\""; break;
+        case '\\': oss << "\\\\"; break;
+        case '\b': oss << "\\b";  break;
+        case '\f': oss << "\\f";  break;
+        case '\n': oss << "\\n";  break;
+        case '\r': oss << "\\r";  break;
+        case '\t': oss << "\\t";  break;
+        default:
+            if (static_cast<unsigned char>(c) < 0x20) {
+                oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << (int)c;
+            }
+            else {
+                oss << c;
+            }
+            break;
+        }
+    }
+    return oss.str();
+}
+
+static std::string getCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm bt;
+#if defined(_WIN32)
+    localtime_s(&bt, &in_time_t);
+#else
+    localtime_r(&in_time_t, &bt);
+#endif
+    std::ostringstream oss;
+    oss << std::put_time(&bt, "%Y-%m-%dT%H:%M:%S");
+    return oss.str();
+}
+
+static std::string jsonizeASTNode(ASTNode* node, int indent = 2) {
+    if (!node) return "null";
+    std::ostringstream oss;
+    std::string pad(indent, ' ');
+    std::string padChild(indent + 2, ' ');
+
+    switch (node->type) {
+    case NODE_IF: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_IF\",\n";
+        oss << padChild << "\"cond\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
+        oss << padChild << "\"thenBranch\": " << jsonizeASTNode(node->right, indent + 2) << ",\n";
+        oss << padChild << "\"elseBranch\": " << jsonizeASTNode(node->elseBranch, indent + 2) << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_COND: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_COND\",\n";
+        oss << padChild << "\"op\": \"" << escape_json(node->op) << "\",\n";
+        oss << padChild << "\"left\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
+        oss << padChild << "\"right\": " << jsonizeASTNode(node->right, indent + 2) << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_ID: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_ID\",\n";
+        oss << padChild << "\"value\": \"" << escape_json(node->token->value) << "\",\n";
+        oss << padChild << "\"line\": " << node->token->line << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_NUM: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_NUM\",\n";
+        oss << padChild << "\"value\": \"" << escape_json(node->token->value) << "\",\n";
+        oss << padChild << "\"line\": " << node->token->line << "\n";
+        oss << pad << "}";
+        break;
+    }
+    default:
+        oss << "null";
+    }
+    return oss.str();
+}
+
+
+void Parser::writeASTToJSON(ASTNode* root, const std::string& filename, const std::string& srcPath) {
+    std::ofstream out(filename, std::ios::binary);
+    if (!out.is_open()) {
+        std::cerr << "Error: cannot open file " << filename << " for writing.\n";
+        return;
+    }
+
+    out << "{\n";
+    out << "  \"source\": \"" << escape_json(srcPath) << "\",\n";
+    out << "  \"timestamp\": \"" << getCurrentTimestamp() << "\",\n";
+    out << "  \"ast\": " << jsonizeASTNode(root, 2) << ",\n";
+
+    const auto& errs = getErrors();
+    out << "  \"errors\": [\n";
+    for (size_t i = 0; i < errs.size(); ++i) {
+        out << "    \"" << escape_json(errs[i]) << "\"";
+        if (i != errs.size() - 1) out << ",";
+        out << "\n";
+    }
+    out << "  ]\n";
+    out << "}\n";
+    out.close();
 }
