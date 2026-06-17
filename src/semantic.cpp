@@ -81,6 +81,9 @@ SemanticAnalyzer::SemanticAnalyzer() {}
 void SemanticAnalyzer::analyze(ASTNode* ast, SymTab& symtab, const std::string& srcPath) {
     errors.clear();
     if (ast) {
+        if (ast->type != NODE_IF) {
+            errors.push_back("Line 1: Root node is not an IF statement");
+        }
         checkNode(ast, symtab);
     }
     // 调用静态函数输出 JSON
@@ -131,7 +134,7 @@ void SemanticAnalyzer::checkNode(ASTNode* node, SymTab& symtab) {
     }
 }
 
-// 检查条件表达式 E → id1 N id2
+// 检查条件表达式 E → id1 N id2  和
 void SemanticAnalyzer::checkCondExpr(ASTNode* node, SymTab& symtab) {
     ASTNode* leftId = node->left;
     ASTNode* rightId = node->right;

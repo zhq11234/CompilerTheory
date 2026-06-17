@@ -59,6 +59,18 @@ static void writeJSON(const std::string& filename, const std::vector<Quadruple>&
     out << "}\n";
 }
 
+static void resolveLabels(std::vector<Quadruple>& quads, const std::map<std::string, size_t>& labelMap) {
+    for (auto& q : quads) {
+        if (q.op == "j" || q.op == "j>" || q.op == "j<" || q.op == "j=") {
+            auto it = labelMap.find(q.result);
+            if (it != labelMap.end()) {
+                q.result = std::to_string(it->second);
+            }
+        }
+    }
+}
+
+
 // ==================== IRGenerator 类方法实现 ====================
 
 IRGenerator::IRGenerator() : labelCounter(0) {}
@@ -70,13 +82,11 @@ std::string IRGenerator::newLabel() {
 std::vector<Quadruple> IRGenerator::generate(ASTNode* ast, SymTab& symtab, const std::string& srcPath) {
     std::vector<Quadruple> quads;
     labelCounter = 0;
+    labelMap.clear();
     if (ast && ast->type == NODE_IF) {
         genIfElse(ast, quads, symtab);
     }
-    else if (ast && ast->type == NODE_ASSIGN) {
-        genAssign(ast, quads, symtab);
-    }
-    // 构造输出路径
+    resolveLabels(quads, labelMap);   // 替换标签为数字索引
     writeJSON(srcPath + "/test_ir.json", quads);
     return quads;
 }
@@ -97,31 +107,47 @@ void IRGenerator::genIfElse(ASTNode* node, std::vector<Quadruple>& quads, SymTab
     std::string falseLabel = newLabel();
     std::string endLabel = newLabel();
 
+    // 1. 生成条件跳转（目标 trueLabel）
     genCond(cond, quads, trueLabel, falseLabel, symtab);
+
+    // 2. 无条件跳转到 else（目标 falseLabel）
     quads.push_back({ "j", "", "", falseLabel });
 
-    // then 分支
+    // 3. 记录 trueLabel 指向 then 分支的第一条指令（即当前位置）
+    labelMap[trueLabel] = quads.size();
+
+    // 4. 生成 then 分支
     if (thenStmt) {
-        if (thenStmt->type == NODE_ASSIGN)
+        /*if (thenStmt->type == NODE_ASSIGN)
             genAssign(thenStmt, quads, symtab);
         else if (thenStmt->type == NODE_IF)
-            genIfElse(thenStmt, quads, symtab);
+            genIfElse(thenStmt, quads, symtab);*/
+        if (thenStmt->type == NODE_COND)
+            genCond(thenStmt, quads, trueLabel, falseLabel, symtab);
     }
     quads.push_back({ "j", "", "", endLabel });
 
-    // else 分支
+    // 5. 记录 falseLabel 指向 else 分支的第一条指令
+    labelMap[falseLabel] = quads.size();
+
+    // 6. 生成 else 分支
     if (elseStmt) {
-        if (elseStmt->type == NODE_ASSIGN)
+        /*if (elseStmt->type == NODE_ASSIGN)
             genAssign(elseStmt, quads, symtab);
         else if (elseStmt->type == NODE_IF)
-            genIfElse(elseStmt, quads, symtab);
+            genIfElse(elseStmt, quads, symtab);*/
+        if (thenStmt->type == NODE_COND)
+            genCond(thenStmt, quads, trueLabel, falseLabel, symtab);
     }
+
+    // 7. 记录 endLabel 指向整个 if-else 结束后的位置（即当前 quads 大小）
+    labelMap[endLabel] = quads.size();
 }
 
 void IRGenerator::genCond(ASTNode* node, std::vector<Quadruple>& quads,
     std::string trueLabel, std::string falseLabel, SymTab& symtab) {
-    (void)falseLabel;
-    if (node->type != NODE_COND) return;
+    /*(void)falseLabel;*/
+    /*if (node->type != NODE_COND) return;*/
     std::string left = node->left->token->value;
     std::string right = node->right->token->value;
     std::string op = node->op;
@@ -131,10 +157,10 @@ void IRGenerator::genCond(ASTNode* node, std::vector<Quadruple>& quads,
     else                quads.push_back({ "j=", left, right, trueLabel });
 }
 
-void IRGenerator::genAssign(ASTNode* node, std::vector<Quadruple>& quads, SymTab& symtab) {
-    if (node->type != NODE_ASSIGN) return;
-    if (node->op != "=") return;
-    std::string left = node->left->token->value;
-    std::string right = node->right->token->value;
-    quads.push_back({ "=", right, "", left });
-}
+//void IRGenerator::genAssign(ASTNode* node, std::vector<Quadruple>& quads, SymTab& symtab) {
+//    if (node->type != NODE_ASSIGN) return;
+//    if (node->op != "=") return;
+//    std::string left = node->left->token->value;
+//    std::string right = node->right->token->value;
+//    quads.push_back({ "=", right, "", left });
+//}
