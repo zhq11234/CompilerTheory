@@ -1,16 +1,16 @@
-﻿#include "symtab.h"
+#include "symtab.h"
 #include <ostream>
 
 SymTab::SymTab() = default;
 
-bool SymTab::insert(const std::string& name, const std::string& type, int scope, int line)
+bool SymTab::insert(const std::string& name, const std::string& type,int scope ,int line)
 {
 	if (lookup(name)) return false;
-	table.push_back({name, type, scope, line});
+	table.push_back({name, type, 1, line});
 	return true;
 }
 
-symbol_enum_symbol* SymTab::lookup(const std::string& name)
+Symbol* SymTab::lookup(const std::string& name)
 {
 	for (auto& s : table)
 		if (s.name == name) return &s;
@@ -22,7 +22,7 @@ bool SymTab::isDeclared(const std::string& name)
 	return lookup(name) != nullptr;
 }
 
-std::vector<symbol_enum_symbol> SymTab::getAllSymbols()
+std::vector<Symbol> SymTab::getAllSymbols()
 {
 	return table;
 }

@@ -1,4 +1,4 @@
-ï»¿#pragma once
+#pragma once
 
 #include <vector>
 #include <string>
@@ -14,7 +14,7 @@ private:
 	int line;
 	int pos;
 	std::string source;
-	std::string sourceName;        // å­˜å‚¨æºæ–‡ä»¶åï¼ˆä¸å«è·¯å¾„ï¼‰
+	std::string sourceName;        // ´æ´¢Ô´ÎÄ¼şÃû£¨²»º¬Â·¾¶£©
 
 	char peek();
 	char advance();

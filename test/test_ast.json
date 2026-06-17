@@ -1,0 +1,51 @@
+{
+  "source": "test.src",
+  "timestamp": "2026-06-17T15:34:23",
+  "ast": {
+    "type": "NODE_IF",
+    "cond": {
+      "type": "NODE_COND",
+      "op": ">",
+      "left": {
+        "type": "NODE_ID",
+        "value": "x",
+        "line": 1
+      },
+      "right": {
+        "type": "NODE_ID",
+        "value": "z",
+        "line": 1
+      }
+    },
+    "thenBranch": {
+      "type": "NODE_COND",
+      "op": "=",
+      "left": {
+        "type": "NODE_ID",
+        "value": "y",
+        "line": 2
+      },
+      "right": {
+        "type": "NODE_NUM",
+        "value": "1",
+        "line": 2
+      }
+    },
+    "elseBranch": {
+      "type": "NODE_COND",
+      "op": "=",
+      "left": {
+        "type": "NODE_ID",
+        "value": "z",
+        "line": 4
+      },
+      "right": {
+        "type": "NODE_NUM",
+        "value": "2",
+        "line": 4
+      }
+    }
+  },
+  "errors": [
+  ]
+}

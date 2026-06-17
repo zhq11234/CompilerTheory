@@ -1,4 +1,4 @@
-ï»¿#include "parser.h"
+#include "parser.h"
 #include <sstream>
 #include <cassert>
 #include <fstream>
@@ -6,475 +6,478 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
+using namespace Symbol;
 
 LRAnalysisTable::LRAnalysisTable() {
-	buildTable();
+    buildTable();
 }
+
 
 void LRAnalysisTable::buildTable() {
-	// äº§ç”Ÿå¼ç¼–å·ä»0å¼€å§‹
-	// 0: S' -> S
-	// 1: S -> if E then P else P
-	// 2: E -> id N id
-	// 3: P -> id N NUM
-	// 4: N -> >
-	// 5: N -> =
-	// 6: N -> <
-	rhsLength = { 1, 6, 3, 3, 1, 1, 1 };   // å³éƒ¨é•¿åº¦
-	lhsNonTerminal = { S1, S, E, P, N, N, N }; // å·¦éƒ¨éç»ˆç»“ç¬¦
+    // ²úÉúÊ½±àºÅ´Ó0¿ªÊ¼
+    // 0: S' -> S
+    // 1: S -> if E then P else P
+    // 2: E -> id N id
+    // 3: P -> id N NUM
+    // 4: N -> >
+    // 5: N -> =
+    // 6: N -> <
+    rhsLength = { 1, 6, 3, 3, 1, 1, 1 };   // ÓÒ²¿³¤¶È
+    lhsNonTerminal = { S1, S, E, P, N, N, N }; // ×ó²¿·ÇÖÕ½á·û
 
-	// ---- 2. Action è¡¨ ----
-	// è¡¨é¡¹æ ¼å¼: (state, symbol) -> action
-	// action >0 ç§»è¿›åˆ°çŠ¶æ€ï¼Œ<0 å½’çº¦ç¼–å·ï¼ˆ- (prodIdx+1)ï¼‰ï¼Œ0 æ¥å—ï¼Œ-1 å‡ºé”™ï¼ˆçœç•¥ï¼‰
-	// ä»¥ä¸‹æ ¹æ®æ‰‹åŠ¨æ¨å¯¼çš„è¡¨æ ¼å¡«å†™
-	actionTable[{0, IF}] = 2;
-	actionTable[{2, ID}] = 4;
-	actionTable[{3, THEN}] = 5;
-	actionTable[{4, GT}] = 7;
-	actionTable[{4, EQ}] = 8;
-	actionTable[{4, LT}] = 9;
-	actionTable[{5, ID}] = 11;
-	actionTable[{6, ID}] = 12;
-	actionTable[{7, ID}] = -4;   // å½’çº¦äº§ç”Ÿå¼4 (N->>)
-	actionTable[{8, ID}] = -5;   // å½’çº¦äº§ç”Ÿå¼5 (N->=)
-	actionTable[{9, ID}] = -6;   // å½’çº¦äº§ç”Ÿå¼6 (N-><)
-	actionTable[{10, ELSE}] = 13;
-	actionTable[{11, GT}] = 15;
-	actionTable[{11, EQ}] = 16;
-	actionTable[{11, LT}] = 17;
-	actionTable[{12, THEN}] = -2; // å½’çº¦äº§ç”Ÿå¼2 (E->id N id)
-	actionTable[{13, ID}] = 19;
-	actionTable[{14, NUM}] = 20;
-	actionTable[{15, NUM}] = -4;  // å½’çº¦äº§ç”Ÿå¼4 (N->>)
-	actionTable[{16, NUM}] = -5;
-	actionTable[{17, NUM}] = -6;
-	actionTable[{18, EOF_}] = -1; // å½’çº¦äº§ç”Ÿå¼1 (S->...)
-	actionTable[{19, GT}] = 15;
-	actionTable[{19, EQ}] = 16;
-	actionTable[{19, LT}] = 17;
-	actionTable[{20, ELSE}] = -3; // å½’çº¦äº§ç”Ÿå¼3 (P->id N NUM)
-	actionTable[{21, NUM}] = 22;
-	actionTable[{22, EOF_}] = -3; // å½’çº¦äº§ç”Ÿå¼3 (P->id N NUM)
+    // ---- 2. Action ±í ----
+    // ±íÏî¸ñÊ½: (state, symbol) -> action
+    // action >0 ÒÆ½øµ½×´Ì¬£¬<0 ¹éÔ¼±àºÅ£¨- (prodIdx+1)£©£¬0 ½ÓÊÜ£¬-1 ³ö´í£¨Ê¡ÂÔ£©
+    // ÒÔÏÂ¸ù¾İÊÖ¶¯ÍÆµ¼µÄ±í¸ñÌîĞ´
+    actionTable[{0, IF}] = 2;
+    actionTable[{2, ID}] = 4;
+    actionTable[{3, THEN}] = 5;
+    actionTable[{4, GT}] = 7;
+    actionTable[{4, EQ}] = 8;
+    actionTable[{4, LT}] = 9;
+    actionTable[{5, ID}] = 11;
+    actionTable[{6, ID}] = 12;
+    actionTable[{7, ID}] = -4;   // ¹éÔ¼²úÉúÊ½4 (N->>)
+    actionTable[{8, ID}] = -5;   // ¹éÔ¼²úÉúÊ½5 (N->=)
+    actionTable[{9, ID}] = -6;   // ¹éÔ¼²úÉúÊ½6 (N-><)
+    actionTable[{10, ELSE}] = 13;
+    actionTable[{11, GT}] = 15;
+    actionTable[{11, EQ}] = 16;
+    actionTable[{11, LT}] = 17;
+    actionTable[{12, THEN}] = -2; // ¹éÔ¼²úÉúÊ½2 (E->id N id)
+    actionTable[{13, ID}] = 19;
+    actionTable[{14, NUM}] = 20;
+    actionTable[{15, NUM}] = -4;  // ¹éÔ¼²úÉúÊ½4 (N->>)
+    actionTable[{16, NUM}] = -5;
+    actionTable[{17, NUM}] = -6;
+    actionTable[{18, EOF_}] = -1; // ¹éÔ¼²úÉúÊ½1 (S->...)
+    actionTable[{19, GT}] = 15;
+    actionTable[{19, EQ}] = 16;
+    actionTable[{19, LT}] = 17;
+    actionTable[{20, ELSE}] = -3; // ¹éÔ¼²úÉúÊ½3 (P->id N NUM)
+    actionTable[{21, NUM}] = 22;
+    actionTable[{22, EOF_}] = -3; // ¹éÔ¼²úÉúÊ½3 (P->id N NUM)
 
-	// æ¥å—åŠ¨ä½œ
-	actionTable[{1, EOF_}] = 1000;
+    // ½ÓÊÜ¶¯×÷
+    actionTable[{1, EOF_}] = 1000;
 
-	// ---- 3. Goto è¡¨ ----
-	// (state, nonTerminal) -> nextState
-	gotoTable[{0, S}] = 1;
-	gotoTable[{2, E}] = 3;
-	gotoTable[{4, N}] = 6;
-	gotoTable[{5, P}] = 10;
-	gotoTable[{11, N}] = 14;
-	gotoTable[{13, P}] = 18;
-	gotoTable[{19, N}] = 21;
+    // ---- 3. Goto ±í ----
+    // (state, nonTerminal) -> nextState
+    gotoTable[{0, S}] = 1;
+    gotoTable[{2, E}] = 3;
+    gotoTable[{4, N}] = 6;
+    gotoTable[{5, P}] = 10;
+    gotoTable[{11, N}] = 14;
+    gotoTable[{13, P}] = 18;
+    gotoTable[{19, N}] = 21;
 
-	// ---- 4. é¡¹ç›®é›†æè¿°ï¼ˆç”¨äºGUIï¼‰ ----
-	// æŒ‰ç…§æ‰‹åŠ¨æ¨å¯¼çš„ I0~I22 å¡«å†™
-	itemSets = {
-		// I0
-		"S' -> Â· S , #\nS -> Â· if E then P else P , #\n",
-		// I1
-		"S' -> S Â· , #\n",
-		// I2
-		"S -> if Â· E then P else P , #\nE -> Â· id N id , then\n",
-		// I3
-		"S -> if E Â· then P else P , #\n",
-		// I4
-		"E -> id Â· N id , then\nN -> Â· > , id\nN -> Â· = , id\nN -> Â· < , id\n",
-		// I5
-		"S -> if E then Â· P else P , #\nP -> Â· id N NUM , else\n",
-		// I6
-		"E -> id N Â· id , then\n",
-		// I7
-		"N -> > Â· , id\n",
-		// I8
-		"N -> = Â· , id\n",
-		// I9
-		"N -> < Â· , id\n",
-		// I10
-		"S -> if E then P Â· else P , #\n",
-		// I11
-		"P -> id Â· N NUM , else\nN -> Â· > , NUM\nN -> Â· = , NUM\nN -> Â· < , NUM\n",
-		// I12
-		"E -> id N id Â· , then\n",
-		// I13
-		"S -> if E then P else Â· P , #\nP -> Â· id N NUM , #\n",
-		// I14
-		"P -> id N Â· NUM , else\n",
-		// I15
-		"N -> > Â· , NUM\n",
-		// I16
-		"N -> = Â· , NUM\n",
-		// I17
-		"N -> < Â· , NUM\n",
-		// I18
-		"S -> if E then P else P Â· , #\n",
-		// I19
-		"P -> id Â· N NUM , #\nN -> Â· > , NUM\nN -> Â· = , NUM\nN -> Â· < , NUM\n",
-		// I20
-		"P -> id N NUM Â· , else\n",
-		// I21
-		"P -> id N Â· NUM , #\n",
-		// I22
-		"P -> id N NUM Â· , #\n"
-	};
+    // ---- 4. ÏîÄ¿¼¯ÃèÊö£¨ÓÃÓÚGUI£© ----
+    // °´ÕÕÊÖ¶¯ÍÆµ¼µÄ I0~I22 ÌîĞ´
+    itemSets = {
+        // I0
+        "S' -> ¡¤ S , #\nS -> ¡¤ if E then P else P , #\n",
+        // I1
+        "S' -> S ¡¤ , #\n",
+        // I2
+        "S -> if ¡¤ E then P else P , #\nE -> ¡¤ id N id , then\n",
+        // I3
+        "S -> if E ¡¤ then P else P , #\n",
+        // I4
+        "E -> id ¡¤ N id , then\nN -> ¡¤ > , id\nN -> ¡¤ = , id\nN -> ¡¤ < , id\n",
+        // I5
+        "S -> if E then ¡¤ P else P , #\nP -> ¡¤ id N NUM , else\n",
+        // I6
+        "E -> id N ¡¤ id , then\n",
+        // I7
+        "N -> > ¡¤ , id\n",
+        // I8
+        "N -> = ¡¤ , id\n",
+        // I9
+        "N -> < ¡¤ , id\n",
+        // I10
+        "S -> if E then P ¡¤ else P , #\n",
+        // I11
+        "P -> id ¡¤ N NUM , else\nN -> ¡¤ > , NUM\nN -> ¡¤ = , NUM\nN -> ¡¤ < , NUM\n",
+        // I12
+        "E -> id N id ¡¤ , then\n",
+        // I13
+        "S -> if E then P else ¡¤ P , #\nP -> ¡¤ id N NUM , #\n",
+        // I14
+        "P -> id N ¡¤ NUM , else\n",
+        // I15
+        "N -> > ¡¤ , NUM\n",
+        // I16
+        "N -> = ¡¤ , NUM\n",
+        // I17
+        "N -> < ¡¤ , NUM\n",
+        // I18
+        "S -> if E then P else P ¡¤ , #\n",
+        // I19
+        "P -> id ¡¤ N NUM , #\nN -> ¡¤ > , NUM\nN -> ¡¤ = , NUM\nN -> ¡¤ < , NUM\n",
+        // I20
+        "P -> id N NUM ¡¤ , else\n",
+        // I21
+        "P -> id N ¡¤ NUM , #\n",
+        // I22
+        "P -> id N NUM ¡¤ , #\n"
+    };
 }
 
-int LRAnalysisTable::getAction(int state, int tokenType) {
-	auto it = actionTable.find({ state, tokenType });
-	if (it != actionTable.end()) return it->second;
-	return -999; // å‡ºé”™
+int LRAnalysisTable::getAction(int state, int tokenType) const {
+    auto it = actionTable.find({ state, tokenType });
+    if (it != actionTable.end()) return it->second;
+    return -999; // ³ö´í
 }
 
-int LRAnalysisTable::getGoto(int state, int nonTerminal) {
-	auto it = gotoTable.find({ state, nonTerminal });
-	if (it != gotoTable.end()) return it->second;
-	return -1;
+int LRAnalysisTable::getGoto(int state, int nonTerminal) const {
+    auto it = gotoTable.find({ state, nonTerminal });
+    if (it != gotoTable.end()) return it->second;
+    return -1;
 }
 
-std::string LRAnalysisTable::getActionString(int state, int tokenType) {
-	int act = getAction(state, tokenType);
-	if (act > 0) return "shift " + std::to_string(act);
-	if (act < 0) return "reduce " + std::to_string(-act - 1); // äº§ç”Ÿå¼ç¼–å· = -act - 1
-	if (act == 0) return "accept";
-	return "error";
+std::string LRAnalysisTable::getActionString(int state, int tokenType) const {
+    int act = getAction(state, tokenType);
+    if (act > 0) return "shift " + std::to_string(act);
+    if (act < 0) return "reduce " + std::to_string(-act - 1); // ²úÉúÊ½±àºÅ = -act - 1
+    if (act == 0) return "accept";
+    return "error";
 }
 
 //-------------------
 
 Parser::Parser() {}
 
-// å®ç° Parser::getProcessLog
-std::string Parser::getProcessLog() {
-	return processLog;
+// ÊµÏÖ Parser::getProcessLog
+std::string Parser::getProcessLog() const {
+    return processLog;
 }
 
-int Parser::getSymbol(const Token& tok) {
-	if (tok.type == 0) return -1;   // é”™è¯¯Token
+int Parser::getSymbol(const Token& tok) const {
+    if (tok.type == 0) return -1;   // ´íÎóToken
 
-	if (tok.type == 1) { // å…³é”®å­—
-		if (tok.value == "if")   return IF;
-		if (tok.value == "then") return THEN;
-		if (tok.value == "else") return ELSE;
-		// å…¶ä»–å…³é”®å­—ï¼ˆodd, beginç­‰ï¼‰ä¸æ”¯æŒï¼ŒæŠ¥é”™
-		return -1;
-	}
-	if (tok.type == 2) return ID;          // æ ‡è¯†ç¬¦
-	if (tok.type == 3) return NUM;         // æ•°å­—
-	if (tok.type == 4) {                   // è¿ç®—ç¬¦
-		if (tok.value == ">")  return GT;
-		if (tok.value == "=")  return EQ;
-		if (tok.value == "<")  return LT;
-		return -1;  // ä¸æ”¯æŒçš„è¿ç®—ç¬¦
-	}
-	// åˆ†éš”ç¬¦ç­‰ä¸å…³å¿ƒ
-	return -1;
+    if (tok.type == 1) { // ¹Ø¼ü×Ö
+        if (tok.value == "if")   return IF;
+        if (tok.value == "then") return THEN;
+        if (tok.value == "else") return ELSE;
+        // ÆäËû¹Ø¼ü×Ö£¨odd, beginµÈ£©²»Ö§³Ö£¬±¨´í
+        return -1;
+    }
+    if (tok.type == 2) return ID;          // ±êÊ¶·û
+    if (tok.type == 3) return NUM;         // Êı×Ö
+    if (tok.type == 4) {                   // ÔËËã·û
+        if (tok.value == ">")  return GT;
+        if (tok.value == "=")  return EQ;
+        if (tok.value == "<")  return LT;
+        return -1;  // ²»Ö§³ÖµÄÔËËã·û
+    }
+    // ·Ö¸ô·ûµÈ²»¹ØĞÄ
+    return -1;
 }
 
 ASTNode* Parser::createLeafNode(const Token& tok) {
-	ASTNode* node = new ASTNode;
-	node->token = new Token(tok);
-	node->op = "";
-	node->left = node->right = nullptr;
-	node->thenBranch = node->elseBranch = nullptr;
+    ASTNode* node = new ASTNode;
+    node->token = new Token(tok);
+    node->op = "";
+    node->left = node->right = nullptr;
+    node->thenBranch = node->elseBranch = nullptr;
 
-	if (tok.type == 2) node->type = NODE_ID;
-	else if (tok.type == 3) node->type = NODE_NUM;
-	else node->type = NODE_ID; // å…¶ä»–å ä½
-	return node;
+    if (tok.type == 2) node->type = NODE_ID;
+    else if (tok.type == 3) node->type = NODE_NUM;
+    else node->type = NODE_ID; // ÆäËûÕ¼Î»
+    return node;
 }
 
 ASTNode* Parser::reduce(int prodIdx) {
-	int len = table.getRhsLength()[prodIdx];
-	std::vector<ASTNode*> children(len);
-	// ä»æ ˆä¸­å¼¹å‡ºå³éƒ¨ç¬¦å·å¯¹åº”çš„èŠ‚ç‚¹ï¼ˆé€†åºï¼‰
-	for (int i = len - 1; i >= 0; --i) {
-		children[i] = nodeStack.top();
-		nodeStack.pop();
-	}
+    int len = table.getRhsLength()[prodIdx];
+    std::vector<ASTNode*> children(len);
+    // ´ÓÕ»ÖĞµ¯³öÓÒ²¿·ûºÅ¶ÔÓ¦µÄ½Úµã£¨ÄæĞò£©
+    for (int i = len - 1; i >= 0; --i) {
+        children[i] = nodeStack.top();
+        nodeStack.pop();
+    }
 
-	ASTNode* node = nullptr;
-	switch (prodIdx) {
-	case 1: { // S -> if E then P else P
-		node = new ASTNode;
-		node->type = NODE_IF;
-		node->left = children[1];   // E
-		node->right = children[3];  // P1 (thenåˆ†æ”¯)
-		node->elseBranch = children[5]; // P2 (elseåˆ†æ”¯)
-		// åˆ é™¤å ä½èŠ‚ç‚¹ if, then, else
-		delete children[0];
-		delete children[2];
-		delete children[4];
-		break;
-	}
-	case 2: { // E -> id N id
-		node = new ASTNode;
-		node->type = NODE_COND;      // æ”¹ä¸º NODE_COND
-		node->left = children[0];    // id
-		node->right = children[2];   // id
-		node->op = children[1]->op;  // æ¯”è¾ƒç¬¦
-		delete children[1];          // N èŠ‚ç‚¹ï¼Œä»…ç”¨äºè·å– op
-		break;
-	}
-	case 3: { // P -> id N NUM
-		node = new ASTNode;
-		node->type = NODE_COND;      // æ”¹ä¸º NODE_COND
-		node->left = children[0];    // id
-		node->right = children[2];   // NUM
-		node->op = children[1]->op;  // æ¯”è¾ƒç¬¦
-		delete children[1];          // N èŠ‚ç‚¹ï¼Œä»…ç”¨äºè·å– op
-		break;
-	}
-	case 4: // N -> >
-	case 5: // N -> =
-	case 6: // N -> <
-	{
-		node = new ASTNode;
-		node->type = NODE_COND;      // ä¹Ÿæ”¹ä¸º NODE_CONDï¼ˆä»…ç”¨äºå­˜å‚¨ opï¼‰
-		node->op = children[0]->token->value;
-		node->left = node->right = nullptr;
-		delete children[0];
-		break;
-	}
-	default:
-		assert(false); // ä¸åº”å‘ç”Ÿ
-	}
-	return node;
+    ASTNode* node = nullptr;
+    switch (prodIdx) {
+    case 1: { // S -> if E then P else P
+        node = new ASTNode;
+        node->type = NODE_IF;
+        node->left = children[1];   // E
+        node->right = children[3];  // P1 (then·ÖÖ§)
+        node->elseBranch = children[5]; // P2 (else·ÖÖ§)
+        // É¾³ıÕ¼Î»½Úµã if, then, else
+        delete children[0];
+        delete children[2];
+        delete children[4];
+        break;
+    }
+    case 2: { // E -> id N id
+        node = new ASTNode;
+        node->type = NODE_COND;      // ¸ÄÎª NODE_COND
+        node->left = children[0];    // id
+        node->right = children[2];   // id
+        node->op = children[1]->op;  // ±È½Ï·û
+        delete children[1];          // N ½Úµã£¬½öÓÃÓÚ»ñÈ¡ op
+        break;
+    }
+    case 3: { // P -> id N NUM
+        node = new ASTNode;
+        node->type = NODE_COND;      // ¸ÄÎª NODE_COND
+        node->left = children[0];    // id
+        node->right = children[2];   // NUM
+        node->op = children[1]->op;  // ±È½Ï·û
+        delete children[1];          // N ½Úµã£¬½öÓÃÓÚ»ñÈ¡ op
+        break;
+    }
+    case 4: // N -> >
+    case 5: // N -> =
+    case 6: // N -> <
+    {
+        node = new ASTNode;
+        node->type = NODE_COND;      // Ò²¸ÄÎª NODE_COND£¨½öÓÃÓÚ´æ´¢ op£©
+        node->op = children[0]->token->value;
+        node->left = node->right = nullptr;
+        delete children[0];
+        break;
+    }
+    default:
+        assert(false); // ²»Ó¦·¢Éú
+    }
+    return node;
 }
 
 ASTNode* Parser::parse(const std::vector<Token>& tokens) {
-	// æ¸…ç©ºçŠ¶æ€
-	while (!stateStack.empty()) stateStack.pop();
-	while (!nodeStack.empty()) { delete nodeStack.top(); nodeStack.pop(); }
-	processLog.clear();
-	errors.clear();
+    // Çå¿Õ×´Ì¬
+    while (!stateStack.empty()) stateStack.pop();
+    while (!nodeStack.empty()) { delete nodeStack.top(); nodeStack.pop(); }
+    processLog.clear();
+    errors.clear();
 
-	stateStack.push(0);  // åˆå§‹çŠ¶æ€
+    stateStack.push(0);  // ³õÊ¼×´Ì¬
 
-	size_t idx = 0;
-	while (true) {
-		int symbol;
-		if (idx >= tokens.size()) {
-			symbol = EOF_;
-		}
-		else {
-			const Token& tok = tokens[idx];
-			if (tok.type == 0) {
-				addError("Lexical error at line " + std::to_string(tok.line) + ": " + tok.value);
-				return nullptr;
-			}
-			symbol = getSymbol(tok);
-			if (symbol == -1) {
-				addError("Unexpected token '" + tok.value + "' at line " + std::to_string(tok.line));
-				return nullptr;
-			}
-		}
+    size_t idx = 0;
+    while (true) {
+        int symbol;
+        if (idx >= tokens.size()) {
+            symbol = EOF_;
+        } else {
+            const Token& tok = tokens[idx];
+            if (tok.type == 0) {
+                addError("Lexical error at line " + std::to_string(tok.line) + ": " + tok.value);
+                return nullptr;
+            }
+            symbol = getSymbol(tok);
+            if (symbol == -1) {
+                addError("Unexpected token '" + tok.value + "' at line " + std::to_string(tok.line));
+                return nullptr;
+            }
+        }
 
-		int state = stateStack.top();
-		int action = table.getAction(state, symbol);
-		logStep(state, symbol, action, "");
-		if (action == 1000) {   // æ¥å—
-			if (nodeStack.size() == 1)
-				return nodeStack.top();
-			else {
-				addError("Accept with non-single node stack");
-				return nullptr;
-			}
-		}
-		else if (action > 0) {   // ç§»è¿›ï¼ˆæ­£æ•°ï¼Œä¸æ˜¯ 1000ï¼‰
-			if (symbol != EOF_) {
-				ASTNode* leaf = createLeafNode(tokens[idx]);
-				nodeStack.push(leaf);
-			}
-			stateStack.push(action);
-			++idx;
-		}
-		else if (action < 0 && action >= -6) {   // å½’çº¦ï¼ˆ-1 ~ -6 å¯¹åº”äº§ç”Ÿå¼0~6ï¼‰
-			int prodIdx = -action;   // å› ä¸º action = -prodIdx
-			int rhsLen = table.getRhsLength()[prodIdx];
-			for (int i = 0; i < rhsLen; ++i)
-				stateStack.pop();
-			ASTNode* newNode = reduce(prodIdx);
-			nodeStack.push(newNode);
-			int nonTerm = table.getLhsNonTerminal()[prodIdx];
-			int gotoState = table.getGoto(stateStack.top(), nonTerm);
-			if (gotoState == -1) {
-				addError("Goto error: state " + std::to_string(stateStack.top()) +
-					" non-terminal " + std::to_string(nonTerm));
-				return nullptr;
-			}
-			stateStack.push(gotoState);
-		}
-		else {   // action == -999 æˆ–å…¶ä»–æœªå®šä¹‰ â†’ è¯­æ³•é”™è¯¯
-			std::string msg = "Syntax error at state " + std::to_string(state) +
-				", symbol " + std::to_string(symbol);
-			if (idx < tokens.size())
-				msg += " (token: " + tokens[idx].value + ")";
-			addError(msg);
-			return nullptr;
-		}
-	}
+        int state = stateStack.top();
+        int action = table.getAction(state, symbol);
+        logStep(state, symbol, action, "");
+        if (action == 1000) {   // ½ÓÊÜ
+            if (nodeStack.size() == 1)
+                return nodeStack.top();
+            else {
+                addError("Accept with non-single node stack");
+                return nullptr;
+            }
+        }
+        else if (action > 0) {   // ÒÆ½ø£¨ÕıÊı£¬²»ÊÇ 1000£©
+            if (symbol != EOF_) {
+                ASTNode* leaf = createLeafNode(tokens[idx]);
+                nodeStack.push(leaf);
+            }
+            stateStack.push(action);
+            ++idx;
+        }
+        else if (action <0 && action >= -6) {   // ¹éÔ¼£¨-1 ~ -6 ¶ÔÓ¦²úÉúÊ½0~6£©
+            int prodIdx = -action;   // ÒòÎª action = -prodIdx
+            int rhsLen = table.getRhsLength()[prodIdx];
+            for (int i = 0; i < rhsLen; ++i)
+                stateStack.pop();
+            ASTNode* newNode = reduce(prodIdx);
+            nodeStack.push(newNode);
+            int nonTerm = table.getLhsNonTerminal()[prodIdx];
+            int gotoState = table.getGoto(stateStack.top(), nonTerm);
+            if (gotoState == -1) {
+                addError("Goto error: state " + std::to_string(stateStack.top()) +
+                    " non-terminal " + std::to_string(nonTerm));
+                return nullptr;
+            }
+            stateStack.push(gotoState);
+        }
+        else {   // action == -999 »òÆäËûÎ´¶¨Òå ¡ú Óï·¨´íÎó
+            std::string msg = "Syntax error at state " + std::to_string(state) +
+                ", symbol " + std::to_string(symbol);
+            if (idx < tokens.size())
+                msg += " (token: " + tokens[idx].value + ")";
+            addError(msg);
+            return nullptr;
+        }
+    }
 }
 
 void Parser::printAST(ASTNode* root, std::ostream& out, int depth) {
-	if (!root) return;
-	std::string indent(depth * 2, ' ');
+    if (!root) return;
+    std::string indent(depth * 2, ' ');
 
-	switch (root->type) {
-	case NODE_IF:
-		out << indent << "IfStatement\n";
-		out << indent << "  Condition:\n";
-		printAST(root->left, out, depth + 2);
-		out << indent << "  ThenBranch:\n";
-		printAST(root->right, out, depth + 2);
-		out << indent << "  ElseBranch:\n";
-		printAST(root->elseBranch, out, depth + 2);
-		break;
-	case NODE_ASSIGN:
-		out << indent << "Compare/Assign (op=" << root->op << ")\n";
-		out << indent << "  Left:\n";
-		printAST(root->left, out, depth + 2);
-		out << indent << "  Right:\n";
-		printAST(root->right, out, depth + 2);
-		break;
-	case NODE_ID:
-		out << indent << "Identifier: " << root->token->value << "\n";
-		break;
-	case NODE_NUM:
-		out << indent << "Number: " << root->token->value << "\n";
-		break;
-	default:
-		out << indent << "Unknown node\n";
-		break;
-	}
+    switch (root->type) {
+        case NODE_IF:
+            out << indent << "IfStatement\n";
+            out << indent << "  Condition:\n";
+            printAST(root->left, out, depth + 2);
+            out << indent << "  ThenBranch:\n";
+            printAST(root->right, out, depth + 2);
+            out << indent << "  ElseBranch:\n";
+            printAST(root->elseBranch, out, depth + 2);
+            break;
+        case NODE_ASSIGN:
+            out << indent << "Compare/Assign (op=" << root->op << ")\n";
+            out << indent << "  Left:\n";
+            printAST(root->left, out, depth + 2);
+            out << indent << "  Right:\n";
+            printAST(root->right, out, depth + 2);
+            break;
+        case NODE_ID:
+            out << indent << "Identifier: " << root->token->value << "\n";
+            break;
+        case NODE_NUM:
+            out << indent << "Number: " << root->token->value << "\n";
+            break;
+        default:
+            out << indent << "Unknown node\n";
+            break;
+    }
 }
 
 void Parser::logStep(int state, int symbol, int action, const std::string& desc) {
-	std::ostringstream oss;
-	oss << "State " << state << ", symbol " << symbol << " -> ";
-	if (action > 0) oss << "shift " << action;
-	else if (action < 0) oss << "reduce " << (-action - 1);
-	else if (action == 0) oss << "accept";
-	else oss << "error";
-	if (!desc.empty()) oss << " (" << desc << ")";
-	processLog += oss.str() + "\n";
+    std::ostringstream oss;
+    oss << "State " << state << ", symbol " << symbol << " -> ";
+    if (action > 0) oss << "shift " << action;
+    else if (action < 0) oss << "reduce " << (-action - 1);
+    else if (action == 0) oss << "accept";
+    else oss << "error";
+    if (!desc.empty()) oss << " (" << desc << ")";
+    processLog += oss.str() + "\n";
 }
 
 std::vector<std::string> Parser::getErrors() const {
-	return errors;
+    return errors;
 }
 
 void Parser::addError(const std::string& msg) {
-	errors.push_back(msg);
+    errors.push_back(msg);
 }
 
-// ---------- è¾…åŠ©å‡½æ•°ï¼ˆä» lexer.cpp å¤åˆ¶ï¼Œä¿æŒç»Ÿä¸€ï¼‰ ----------
+
+// ---------- ¸¨Öúº¯Êı£¨´Ó lexer.cpp ¸´ÖÆ£¬±£³ÖÍ³Ò»£© ----------
 static std::string escape_json(const std::string& s) {
-	std::ostringstream oss;
-	for (char c : s) {
-		switch (c) {
-		case '"':  oss << "\\\""; break;
-		case '\\': oss << "\\\\"; break;
-		case '\b': oss << "\\b";  break;
-		case '\f': oss << "\\f";  break;
-		case '\n': oss << "\\n";  break;
-		case '\r': oss << "\\r";  break;
-		case '\t': oss << "\\t";  break;
-		default:
-			if (static_cast<unsigned char>(c) < 0x20) {
-				oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << (int)c;
-			}
-			else {
-				oss << c;
-			}
-			break;
-		}
-	}
-	return oss.str();
+    std::ostringstream oss;
+    for (char c : s) {
+        switch (c) {
+        case '"':  oss << "\\\""; break;
+        case '\\': oss << "\\\\"; break;
+        case '\b': oss << "\\b";  break;
+        case '\f': oss << "\\f";  break;
+        case '\n': oss << "\\n";  break;
+        case '\r': oss << "\\r";  break;
+        case '\t': oss << "\\t";  break;
+        default:
+            if (static_cast<unsigned char>(c) < 0x20) {
+                oss << "\\u" << std::hex << std::setw(4) << std::setfill('0') << (int)c;
+            }
+            else {
+                oss << c;
+            }
+            break;
+        }
+    }
+    return oss.str();
 }
 
 static std::string getCurrentTimestamp() {
-	auto now = std::chrono::system_clock::now();
-	auto in_time_t = std::chrono::system_clock::to_time_t(now);
-	std::tm bt;
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    std::tm bt;
 #if defined(_WIN32)
-	localtime_s(&bt, &in_time_t);
+    localtime_s(&bt, &in_time_t);
 #else
-	localtime_r(&in_time_t, &bt);
+    localtime_r(&in_time_t, &bt);
 #endif
-	std::ostringstream oss;
-	oss << std::put_time(&bt, "%Y-%m-%dT%H:%M:%S");
-	return oss.str();
+    std::ostringstream oss;
+    oss << std::put_time(&bt, "%Y-%m-%dT%H:%M:%S");
+    return oss.str();
 }
 
 static std::string jsonizeASTNode(ASTNode* node, int indent = 2) {
-	if (!node) return "null";
-	std::ostringstream oss;
-	std::string pad(indent, ' ');
-	std::string padChild(indent + 2, ' ');
+    if (!node) return "null";
+    std::ostringstream oss;
+    std::string pad(indent, ' ');
+    std::string padChild(indent + 2, ' ');
 
-	switch (node->type) {
-	case NODE_IF: {
-		oss << "{\n";
-		oss << padChild << "\"type\": \"NODE_IF\",\n";
-		oss << padChild << "\"cond\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
-		oss << padChild << "\"thenBranch\": " << jsonizeASTNode(node->right, indent + 2) << ",\n";
-		oss << padChild << "\"elseBranch\": " << jsonizeASTNode(node->elseBranch, indent + 2) << "\n";
-		oss << pad << "}";
-		break;
-	}
-	case NODE_COND: {
-		oss << "{\n";
-		oss << padChild << "\"type\": \"NODE_COND\",\n";
-		oss << padChild << "\"op\": \"" << escape_json(node->op) << "\",\n";
-		oss << padChild << "\"left\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
-		oss << padChild << "\"right\": " << jsonizeASTNode(node->right, indent + 2) << "\n";
-		oss << pad << "}";
-		break;
-	}
-	case NODE_ID: {
-		oss << "{\n";
-		oss << padChild << "\"type\": \"NODE_ID\",\n";
-		oss << padChild << "\"value\": \"" << escape_json(node->token->value) << "\",\n";
-		oss << padChild << "\"line\": " << node->token->line << "\n";
-		oss << pad << "}";
-		break;
-	}
-	case NODE_NUM: {
-		oss << "{\n";
-		oss << padChild << "\"type\": \"NODE_NUM\",\n";
-		oss << padChild << "\"value\": \"" << escape_json(node->token->value) << "\",\n";
-		oss << padChild << "\"line\": " << node->token->line << "\n";
-		oss << pad << "}";
-		break;
-	}
-	default:
-		oss << "null";
-	}
-	return oss.str();
+    switch (node->type) {
+    case NODE_IF: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_IF\",\n";
+        oss << padChild << "\"cond\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
+        oss << padChild << "\"thenBranch\": " << jsonizeASTNode(node->right, indent + 2) << ",\n";
+        oss << padChild << "\"elseBranch\": " << jsonizeASTNode(node->elseBranch, indent + 2) << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_COND: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_COND\",\n";
+        oss << padChild << "\"op\": \"" << escape_json(node->op) << "\",\n";
+        oss << padChild << "\"left\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
+        oss << padChild << "\"right\": " << jsonizeASTNode(node->right, indent + 2) << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_ID: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_ID\",\n";
+        oss << padChild << "\"value\": \"" << escape_json(node->token->value) << "\",\n";
+        oss << padChild << "\"line\": " << node->token->line << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_NUM: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_NUM\",\n";
+        oss << padChild << "\"value\": \"" << escape_json(node->token->value) << "\",\n";
+        oss << padChild << "\"line\": " << node->token->line << "\n";
+        oss << pad << "}";
+        break;
+    }
+    default:
+        oss << "null";
+    }
+    return oss.str();
 }
 
+
 void Parser::writeASTToJSON(ASTNode* root, const std::string& filename, const std::string& srcPath) {
-	std::ofstream out(filename, std::ios::binary);
-	if (!out.is_open()) {
-		std::cerr << "Error: cannot open file " << filename << " for writing.\n";
-		return;
-	}
+    std::ofstream out(filename, std::ios::binary);
+    if (!out.is_open()) {
+        std::cerr << "Error: cannot open file " << filename << " for writing.\n";
+        return;
+    }
 
-	out << "{\n";
-	out << "  \"source\": \"" << escape_json(srcPath) << "\",\n";
-	out << "  \"timestamp\": \"" << getCurrentTimestamp() << "\",\n";
-	out << "  \"ast\": " << jsonizeASTNode(root, 2) << ",\n";
+    out << "{\n";
+    out << "  \"source\": \"" << escape_json(srcPath) << "\",\n";
+    out << "  \"timestamp\": \"" << getCurrentTimestamp() << "\",\n";
+    out << "  \"ast\": " << jsonizeASTNode(root, 2) << ",\n";
 
-	const auto& errs = getErrors();
-	out << "  \"errors\": [\n";
-	for (size_t i = 0; i < errs.size(); ++i) {
-		out << "    \"" << escape_json(errs[i]) << "\"";
-		if (i != errs.size() - 1) out << ",";
-		out << "\n";
-	}
-	out << "  ]\n";
-	out << "}\n";
-	out.close();
+    const auto& errs = getErrors();
+    out << "  \"errors\": [\n";
+    for (size_t i = 0; i < errs.size(); ++i) {
+        out << "    \"" << escape_json(errs[i]) << "\"";
+        if (i != errs.size() - 1) out << ",";
+        out << "\n";
+    }
+    out << "  ]\n";
+    out << "}\n";
+    out.close();
 }
