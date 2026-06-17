@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <map>
 #include "ast.h"
 #include "symtab.h"
 #include "quadruple.h"
@@ -16,4 +17,5 @@ private:
 	void genIfElse(ASTNode* node, std::vector<Quadruple>& quads, SymTab& symtab);
 	void genCond(ASTNode* node, std::vector<Quadruple>& quads, std::string trueLabel, std::string falseLabel, SymTab& symtab);
 	void genAssign(ASTNode* node, std::vector<Quadruple>& quads, SymTab& symtab);
+	std::map<std::string, size_t> labelMap;
 };

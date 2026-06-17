@@ -81,6 +81,9 @@ SemanticAnalyzer::SemanticAnalyzer() {}
 void SemanticAnalyzer::analyze(ASTNode* ast, SymTab& symtab, const std::string& srcPath) {
     errors.clear();
     if (ast) {
+        if (ast->type != NODE_IF) {
+            errors.push_back("Line 1: Root node is not an IF statement");
+        }
         checkNode(ast, symtab);
     }
     // 调用静态函数输出 JSON
@@ -131,7 +134,7 @@ void SemanticAnalyzer::checkNode(ASTNode* node, SymTab& symtab) {
     }
 }
 
-// 检查条件表达式 E → id1 N id2
+// 检查条件表达式 E → id1 N id2和 P → id N NUM（N为“<”、“>”）
 void SemanticAnalyzer::checkCondExpr(ASTNode* node, SymTab& symtab) {
     ASTNode* leftId = node->left;
     ASTNode* rightId = node->right;
@@ -147,7 +150,7 @@ void SemanticAnalyzer::checkCondExpr(ASTNode* node, SymTab& symtab) {
             ": Left operand of condition expression is not an identifier");
     }
 
-    if (rightId && rightId->type == NODE_ID) {
+    if (rightId && (rightId->type == NODE_ID|| rightId->type == NODE_NUM)) {
         std::string name = rightId->token->value;
         if (!symtab.isDeclared(name)) {
             symtab.insert(name, "int", 1,rightId->token->line);
@@ -155,17 +158,14 @@ void SemanticAnalyzer::checkCondExpr(ASTNode* node, SymTab& symtab) {
     }
     else {
         errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
-            ": Right operand of condition expression is not an identifier");
+            ": Right operand of condition expression is not an identifier or integer constant");
     }
 }
 
-// 检查赋值/比较语句 P → id N NUM
+// 检查赋值语句 P → id N NUM（N为“=”）
 void SemanticAnalyzer::checkAssignExpr(ASTNode* node, SymTab& symtab) {
     ASTNode* leftId = node->left;
     ASTNode* rightNum = node->right;
-
-    bool isAssign = (node->op == "=");
-    std::string stmtType = isAssign ? "Assignment" : "Comparison";
 
     if (leftId && leftId->type == NODE_ID) {
         std::string name = leftId->token->value;
@@ -175,7 +175,7 @@ void SemanticAnalyzer::checkAssignExpr(ASTNode* node, SymTab& symtab) {
     }
     else {
         errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
-            ": " + stmtType + "left operand is not an identifier");
+            ": " + "Assignment left operand is not an identifier");
     }
 
     if (rightNum && rightNum->type == NODE_NUM) {
@@ -183,11 +183,6 @@ void SemanticAnalyzer::checkAssignExpr(ASTNode* node, SymTab& symtab) {
     }
     else {
         errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
-            ": " + stmtType + "right operand is not an integer constant");
-    }
-
-    if (node->op != "=" && node->op != ">" && node->op != "<") {
-        errors.push_back("Line " + std::to_string(node->token ? node->token->line : 0) +
-            ": " + stmtType + "has unknown operator '" + node->op + "'");
+            ": " + "Assignment right operand is not an integer constant");
     }
 }
