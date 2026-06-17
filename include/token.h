@@ -2,8 +2,16 @@
 
 #include <string>
 
+enum TokenType {
+	TOKEN_KEYWORD    = 1,
+	TOKEN_IDENTIFIER = 2,
+	TOKEN_NUMBER     = 3,
+	TOKEN_OPERATOR   = 4,
+	TOKEN_DELIMITER  = 5
+};
+
 struct Token {
-	int type;       // 种别编码：1=关键字  2=标识符  3=整数  4=运算符  5=分隔符
-	std::string value;   // 原始字符串，如 "if"、"x"、"42"、">"、";"
-	int line;       // 行号，用于错误报告定位
+	int type;       // TokenType enum
+	std::string value;
+	int line;
 };

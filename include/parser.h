@@ -46,16 +46,13 @@ public:
 	const std::vector<int>& getLhsNonTerminal() const { return lhsNonTerminal; }
 
 private:
-	std::map<std::pair<int, int>, int> actionTable;  // (状态, 终结符) → 动作
-	std::map<std::pair<int, int>, int> gotoTable;    // (状态, 非终结符) → 目标状态
-	std::vector<int> rhsLength;                 // 各产生式右部长度（归约时弹出状态数）
-	std::vector<int> lhsNonTerminal;            // 各产生式左部非终结符编号
-	std::vector<std::string> itemSets;               // 项目集规范族描述
+	std::map<std::pair<int, int>, int> actionTable;
+	std::map<std::pair<int, int>, int> gotoTable;
+	std::vector<int> rhsLength;
+	std::vector<int> lhsNonTerminal;
+	std::vector<std::string> itemSets;
 };
 
-//类3：Parser（LR(1)语法分析器）
-//文件	parser.h / parser.cpp
-//职责	读入 Token 流，LR(1)移进 - 归约，同步构建 AST
 class Parser {
 public:
 	Parser();

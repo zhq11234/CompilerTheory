@@ -3,7 +3,7 @@
 
 SymTab::SymTab() = default;
 
-bool SymTab::insert(const std::string& name, const std::string& type, int line)
+bool SymTab::insert(const std::string& name, const std::string& type,int scope ,int line)
 {
 	if (lookup(name)) return false;
 	table.push_back({name, type, 1, line});
