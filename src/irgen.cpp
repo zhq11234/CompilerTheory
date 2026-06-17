@@ -36,10 +36,7 @@ static std::string escapeJSON(const std::string& s) {
 static void writeJSON(const std::string& filename, const std::vector<Quadruple>& quads) {
     std::ofstream out(filename);
     if (!out.is_open())
-    {
-        std::cout << "文件路径不存在！\n";
         return;
-    }
 
     out << "{\n";
     out << "  \"source\": \"source.src\",\n";
@@ -87,7 +84,14 @@ std::vector<Quadruple> IRGenerator::generate(ASTNode* ast, SymTab& symtab, const
         genIfElse(ast, quads, symtab);
     }
     resolveLabels(quads, labelMap);   // 替换标签为数字索引
-    writeJSON(srcPath + "/test_ir.json", quads);
+    std::string outFile = srcPath;
+    if (outFile.size() >= 4 && outFile.compare(outFile.size() - 4, 4, ".src") == 0) {
+        outFile.replace(outFile.size() - 4, 4, "_ir.json");
+    }
+    else {
+        outFile += "_ir.json";
+    }
+    writeJSON(outFile, quads);
     return quads;
 }
 

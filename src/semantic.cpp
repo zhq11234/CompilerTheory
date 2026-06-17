@@ -41,10 +41,7 @@ static void writeJSONToFile(const std::string& filename, SymTab& symtab,
     const std::vector<std::string>& errors) {
     std::ofstream out(filename);
     if (!out.is_open())
-    {
-        std::cout << "文件路径不存在！\n";
         return;
-    }
     out << "{\n";
     out << "  \"source\": \"source.src\",\n";
     out << "  \"timestamp\": \"" << getCurrentISO8601Time() << "\",\n";
@@ -86,8 +83,20 @@ void SemanticAnalyzer::analyze(ASTNode* ast, SymTab& symtab, const std::string& 
         }
         checkNode(ast, symtab);
     }
-    // 调用静态函数输出 JSON
-    writeJSONToFile(srcPath+"/test_semantic.json", symtab, errors);
+    // 构造输出文件路径：直接在 srcPath 上替换后缀
+    std::string outFile = srcPath;
+
+    // 检查是否以 ".src" 结尾（不区分大小写可自行扩展）
+    if (outFile.size() >= 4 && outFile.compare(outFile.size() - 4, 4, ".src") == 0) {
+        // 去掉末尾的 ".src"，加上 "_semantic.json"
+        outFile.replace(outFile.size() - 4, 4, "_semantic.json");
+    }
+    else {
+        // 如果没有 .src 后缀，则在末尾直接添加（根据需求也可报错）
+        outFile += "_semantic.json";
+    }
+
+    writeJSONToFile(outFile, symtab, errors);
 }
 
 // 获取错误列表
