@@ -6,8 +6,6 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
-using namespace Symbol;
-
 LRAnalysisTable::LRAnalysisTable() {
     buildTable();
 }

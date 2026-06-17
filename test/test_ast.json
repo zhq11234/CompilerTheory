@@ -1,6 +1,6 @@
 {
   "source": "test.src",
-  "timestamp": "2026-06-17T21:57:57",
+  "timestamp": "2026-06-17T22:37:02",
   "ast": {
     "type": "NODE_IF",
     "cond": {
