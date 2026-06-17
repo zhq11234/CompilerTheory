@@ -6,27 +6,26 @@
 #include <stack>
 #include <string>
 
-
-// 符号编号（内部使用，与词法分析器输出无关）
-namespace Symbol {
+// parser.h
+// 符号编号（内部使用，与词法分析器输出无关）111
+enum Symbol {
 	// 终结符
-	const int IF = 1;
-	const int THEN = 2;
-	const int ELSE = 3;
-	const int ID = 4;
-	const int NUM = 5;
-	const int GT = 6;   // '>'
-	const int EQ = 7;   // '='
-	const int LT = 8;   // '<'
-	const int EOF_ = 9;   // '#'
+	IF = 1,
+	THEN = 2,
+	ELSE = 3,
+	ID = 4,
+	NUM = 5,
+	GT = 6,     // '>'
+	EQ = 7,     // '='
+	LT = 8,     // '<'
+	EOF_ = 9,   // '#'
 	// 非终结符
-	const int S1 = 100; // S'
-	const int S = 101;
-	const int E = 102;
-	const int P = 103;
-	const int N = 104;
-}
-
+	S1 = 100,   // S'
+	S = 101,
+	E = 102,
+	P = 103,
+	N = 104
+};
 
 //类2：  LRAnalysisTable（LR(1)分析表）
 //文件	parser.h / parser.cpp

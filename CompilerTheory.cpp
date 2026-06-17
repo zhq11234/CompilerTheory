@@ -58,7 +58,7 @@ int main() {
 
     std::string source =
         "if x > z then\n"
-        "  y = 1\n"
+        "  y > 1\n"
         "else\n"
         "  z = 2\n";
 

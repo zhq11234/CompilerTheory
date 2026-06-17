@@ -1,6 +1,6 @@
 {
   "source": "test.src",
-  "timestamp": "2026-06-17T15:34:23",
+  "timestamp": "2026-06-17T22:37:02",
   "ast": {
     "type": "NODE_IF",
     "cond": {
@@ -19,7 +19,7 @@
     },
     "thenBranch": {
       "type": "NODE_COND",
-      "op": "=",
+      "op": ">",
       "left": {
         "type": "NODE_ID",
         "value": "y",
@@ -32,7 +32,7 @@
       }
     },
     "elseBranch": {
-      "type": "NODE_COND",
+      "type": "NODE_ASSIGN",
       "op": "=",
       "left": {
         "type": "NODE_ID",

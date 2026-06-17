@@ -6,8 +6,6 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
-using namespace Symbol;
-
 LRAnalysisTable::LRAnalysisTable() {
     buildTable();
 }
@@ -138,7 +136,7 @@ int LRAnalysisTable::getGoto(int state, int nonTerminal) const {
 std::string LRAnalysisTable::getActionString(int state, int tokenType) const {
     int act = getAction(state, tokenType);
     if (act > 0) return "shift " + std::to_string(act);
-    if (act < 0) return "reduce " + std::to_string(-act - 1); // 产生式编号 = -act - 1
+    if (act < 0) return "reduce " + std::to_string(-act - 1); // 产生式编号 = -act
     if (act == 0) return "accept";
     return "error";
 }
@@ -221,10 +219,18 @@ ASTNode* Parser::reduce(int prodIdx) {
     }
     case 3: { // P -> id N NUM
         node = new ASTNode;
-        node->type = NODE_COND;      // 改为 NODE_COND
+        std::string op = children[1]->op;
+        if (op == "=") {
+            // 赋值：id = num
+            node->type = NODE_ASSIGN;
+        }
+        else {
+            // 条件比较：id > num 或 id < num
+            node->type = NODE_COND;
+        }
         node->left = children[0];    // id
         node->right = children[2];   // NUM
-        node->op = children[1]->op;  // 比较符
+        node->op = op;
         delete children[1];          // N 节点，仅用于获取 op
         break;
     }
@@ -429,6 +435,15 @@ static std::string jsonizeASTNode(ASTNode* node, int indent = 2) {
     case NODE_COND: {
         oss << "{\n";
         oss << padChild << "\"type\": \"NODE_COND\",\n";
+        oss << padChild << "\"op\": \"" << escape_json(node->op) << "\",\n";
+        oss << padChild << "\"left\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
+        oss << padChild << "\"right\": " << jsonizeASTNode(node->right, indent + 2) << "\n";
+        oss << pad << "}";
+        break;
+    }
+    case NODE_ASSIGN: {
+        oss << "{\n";
+        oss << padChild << "\"type\": \"NODE_ASSIGN\",\n";
         oss << padChild << "\"op\": \"" << escape_json(node->op) << "\",\n";
         oss << padChild << "\"left\": " << jsonizeASTNode(node->left, indent + 2) << ",\n";
         oss << padChild << "\"right\": " << jsonizeASTNode(node->right, indent + 2) << "\n";
