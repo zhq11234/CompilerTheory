@@ -14,6 +14,8 @@ private:
 	int line;
 	int pos;
 	std::string source;
+	std::string sourceName;        // 存储源文件名（不含路径）
+
 	char peek();
 	char advance();
 	void skipWhitespace();
