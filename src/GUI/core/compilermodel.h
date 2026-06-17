@@ -83,7 +83,7 @@ private:
 	struct SemanticPayload {
 		std::string source;
 		std::string timestamp;
-		std::vector<symbol_enum_symbol> symbols;
+		std::vector<Symbol> symbols;
 		std::vector<std::string> errors;
 	};
 	struct IRPayload {

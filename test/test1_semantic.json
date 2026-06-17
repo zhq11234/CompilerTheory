@@ -1,9 +1,0 @@
-{
-  "source": "test1.src",
-  "timestamp": "2026-06-11T10:00:02",
-  "symtab": [
-    {"name": "x", "type": "int", "scope": 1, "line": 1},
-    {"name": "y", "type": "int", "scope": 1, "line": 2}
-  ],
-  "errors": ["line 2: type mismatch: cannot assign 'int' to variable 'y' of type 'float'"]
-}
