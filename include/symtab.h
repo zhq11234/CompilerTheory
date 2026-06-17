@@ -19,5 +19,5 @@ public:
 	std::vector<Symbol> getAllSymbols();
 	void display(std::ostream& out);
 private:
-	std::vector<Symbol> table;
+	static std::vector<Symbol> table; //静态变量，存储符号表;; //静态变量，存储符号表;
 };

@@ -251,7 +251,21 @@ ASTNode* Parser::reduce(int prodIdx) {
     return node;
 }
 
-ASTNode* Parser::parse(const std::vector<Token>& tokens) {
+ASTNode* Parser::parse(const std::vector<Token>& tokens, const std::string& srcPath) {
+    
+    // 提取源文件名
+    if (!srcPath.empty()) {
+        size_t lastSlash = srcPath.find_last_of("/\\");
+        if (lastSlash != std::string::npos)
+            sourceName = srcPath.substr(lastSlash + 1);
+        else
+            sourceName = srcPath;
+    }
+    else {
+        sourceName = "test.src";
+    }
+
+    
     // 清空状态
     while (!stateStack.empty()) stateStack.pop();
     while (!nodeStack.empty()) { delete nodeStack.top(); nodeStack.pop(); }
@@ -261,6 +275,7 @@ ASTNode* Parser::parse(const std::vector<Token>& tokens) {
     stateStack.push(0);  // 初始状态
 
     size_t idx = 0;
+    ASTNode* root = nullptr;  // ← 声明 root 变量
     while (true) {
         int symbol;
         if (idx >= tokens.size()) {
@@ -283,7 +298,9 @@ ASTNode* Parser::parse(const std::vector<Token>& tokens) {
         logStep(state, symbol, action, "");
         if (action == 1000) {   // 接受
             if (nodeStack.size() == 1)
-                return nodeStack.top();
+            {
+                root = nodeStack.top(); break;
+            }
             else {
                 addError("Accept with non-single node stack");
                 return nullptr;
@@ -322,6 +339,15 @@ ASTNode* Parser::parse(const std::vector<Token>& tokens) {
             return nullptr;
         }
     }
+    // 自动生成 AST JSON
+    std::string baseName = sourceName.substr(0, sourceName.find_last_of('.'));
+    if (baseName.empty()) baseName = "test";
+    std::string jsonPath = "../test/" + baseName + "_ast.json";
+
+    std::cerr << "Writing AST JSON to: " << jsonPath << std::endl;  // 调试输出
+    writeASTToJSON(root, jsonPath);
+
+    return root;
 }
 
 void Parser::printAST(ASTNode* root, std::ostream& out, int depth) {
@@ -473,7 +499,7 @@ static std::string jsonizeASTNode(ASTNode* node, int indent = 2) {
 }
 
 
-void Parser::writeASTToJSON(ASTNode* root, const std::string& filename, const std::string& srcPath) {
+void Parser::writeASTToJSON(ASTNode* root, const std::string& filename) {
     std::ofstream out(filename, std::ios::binary);
     if (!out.is_open()) {
         std::cerr << "Error: cannot open file " << filename << " for writing.\n";
@@ -481,7 +507,7 @@ void Parser::writeASTToJSON(ASTNode* root, const std::string& filename, const st
     }
 
     out << "{\n";
-    out << "  \"source\": \"" << escape_json(srcPath) << "\",\n";
+    out << "  \"source\": \"" << escape_json(sourceName) << "\",\n";
     out << "  \"timestamp\": \"" << getCurrentTimestamp() << "\",\n";
     out << "  \"ast\": " << jsonizeASTNode(root, 2) << ",\n";
 

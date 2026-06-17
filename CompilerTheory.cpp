@@ -56,24 +56,46 @@ int main() {
         }
     }*/
 
+    //std::string source =
+    //    "if x > z then\n"
+    //    "  y > 1\n"
+    //    "else\n"
+    //    "  z = 2\n";
+
+    //Lexer lexer;
+    //auto tokens = lexer.analyze(source, "test.src");        // 传入源文件路径（或仅文件名）
+   
+
+   
+    //lexer.writeTokensToJSON(tokens, "../test/test_tokens.json");
+
+    //// 语法分析
+    //Parser parser;
+    //ASTNode* root = parser.parse(tokens);
+
+    //parser.writeASTToJSON(root, "../test/test_ast.json", "test.src");
+
+    //return 0;
+
+
+
     std::string source =
         "if x > z then\n"
-        "  y > 1\n"
+        "  y = 1\n"
         "else\n"
-        "  z = 2\n";
+        "  z > 23\n";
 
+    // 词法分析（自动生成 tokens.json）
     Lexer lexer;
-    auto tokens = lexer.analyze(source, "test.src");        // 传入源文件路径（或仅文件名）
-   
+    auto tokens = lexer.analyze(source, "test.src");
 
-   
-    lexer.writeTokensToJSON(tokens, "../test/test_tokens.json");
-
-    // 语法分析
+    // 语法分析（自动生成 ast.json）
     Parser parser;
-    ASTNode* root = parser.parse(tokens);
+    ASTNode* root = parser.parse(tokens, "test.src");
+    std::cout << "Parser done, root: " << root << std::endl;  // 调试
 
-    parser.writeASTToJSON(root, "../test/test_ast.json", "test.src");
+    // 可选：输出符号表
+    // lexer.getSymbolTable().display(std::cout);
 
     return 0;
 }

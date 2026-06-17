@@ -1,8 +1,11 @@
 #include "symtab.h"
 #include <ostream>
 
-SymTab::SymTab() = default;
-
+std::vector<Symbol> SymTab::table;
+SymTab::SymTab()
+{
+}
+//¾²Ì¬±äÁ¿£¬´æ´¢·ûºÅ±í;; //¾²Ì¬±äÁ¿£¬´æ´¢·ûºÅ±í;
 bool SymTab::insert(const std::string& name, const std::string& type,int scope ,int line)
 {
 	if (lookup(name)) return false;

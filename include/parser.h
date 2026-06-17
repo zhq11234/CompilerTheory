@@ -8,7 +8,7 @@
 
 // parser.h
 // 符号编号（内部使用，与词法分析器输出无关）111
-enum Symbol {
+enum Symbol1 {
 	// 终结符
 	IF = 1,
 	THEN = 2,
@@ -56,12 +56,12 @@ private:
 class Parser {
 public:
 	Parser();
-	ASTNode* parse(const std::vector<Token>& tokens);  // 主接口：Token流 → AST根节点
+	ASTNode* parse(const std::vector<Token>& tokens, const std::string& srcPath = "");;  // 主接口：Token流 → AST根节点
 	void printAST(ASTNode* root, std::ostream& out, int depth = 0);  // 输出AST
 	std::string getProcessLog()const;  // 获取移进-归约过程日志（GUI状态栈展示用）
 	std::vector<std::string> getErrors()const;  // 获取语法错误列表
+	std::string sourceName;
 
-	void writeASTToJSON(ASTNode* root, const std::string& filename, const std::string& srcPath);
 private:
 	LRAnalysisTable table;
 	std::stack<int> stateStack;       // 状态栈
@@ -74,4 +74,5 @@ private:
     ASTNode* reduce(int prodIdx);                   // 归约并构建AST节点
     void logStep(int state, int symbol, int action, const std::string& desc);
     void addError(const std::string& msg);
+	void writeASTToJSON(ASTNode* root, const std::string& filename);
 };

@@ -263,15 +263,33 @@ std::vector<Token> Lexer::analyze(const std::string& src, const std::string& src
     else
         sourceName = srcPath;
 
+    // 清空符号表
+   // symTab.clear();
+
     std::vector<Token> tokens;
     while (true) {
         Token t = scanToken();
         if (t.type == 0 && t.value.empty()) break;
         tokens.push_back(t);
+
+        // 插入符号表（标识符和关键字）
+        if (t.type == 1 || t.type == 2) {
+            std::string symbolType = (t.type == 1) ? "Keyword" : "Identifier";
+            symTab.insert(t.value, symbolType, 1, t.line);
+        }
     }
+
+    // 自动生成 JSON 文件
+    // 根据源文件名生成对应的 tokens.json 路径
+    std::string baseName = sourceName.substr(0, sourceName.find_last_of('.'));
+    if (baseName.empty()) baseName = "test";
+
+    // 使用 "../test/" 回到项目根目录
+    std::string jsonPath = "../test/" + baseName + "_tokens.json";
+    writeTokensToJSON(tokens, jsonPath);
+
     return tokens;
 }
-
 
 
 
