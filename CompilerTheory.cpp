@@ -80,10 +80,7 @@ int main() {
 
 
     std::string source =
-        "if x > z then\n"
-        "  y = 1\n"
-        "else\n"
-        "  z > 23\n";
+        " if a > b then a = 10 else b < 10\n";
 
     // 词法分析（自动生成 tokens.json）
     Lexer lexer;

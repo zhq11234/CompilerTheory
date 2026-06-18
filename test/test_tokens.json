@@ -1,19 +1,19 @@
 {
   "source": "test.src",
-  "timestamp": "2026-06-18T01:06:20",
+  "timestamp": "2026-06-18T08:37:48",
   "tokens": [
     {"type": 1, "value": "if", "line": 1},
-    {"type": 2, "value": "x", "line": 1},
+    {"type": 2, "value": "a", "line": 1},
     {"type": 4, "value": ">", "line": 1},
-    {"type": 2, "value": "z", "line": 1},
+    {"type": 2, "value": "b", "line": 1},
     {"type": 1, "value": "then", "line": 1},
-    {"type": 2, "value": "y", "line": 2},
-    {"type": 4, "value": "=", "line": 2},
-    {"type": 3, "value": "1", "line": 2},
-    {"type": 1, "value": "else", "line": 3},
-    {"type": 2, "value": "z", "line": 4},
-    {"type": 4, "value": ">", "line": 4},
-    {"type": 3, "value": "23", "line": 4}
+    {"type": 2, "value": "a", "line": 1},
+    {"type": 4, "value": "=", "line": 1},
+    {"type": 3, "value": "10", "line": 1},
+    {"type": 1, "value": "else", "line": 1},
+    {"type": 2, "value": "b", "line": 1},
+    {"type": 4, "value": "<", "line": 1},
+    {"type": 3, "value": "10", "line": 1}
   ],
   "errors": [
   ]

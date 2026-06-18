@@ -1,6 +1,6 @@
 {
   "source": "test.src",
-  "timestamp": "2026-06-18T01:06:20",
+  "timestamp": "2026-06-18T08:38:31",
   "ast": {
     "type": "NODE_IF",
     "cond": {
@@ -8,12 +8,12 @@
       "op": ">",
       "left": {
         "type": "NODE_ID",
-        "value": "x",
+        "value": "a",
         "line": 1
       },
       "right": {
         "type": "NODE_ID",
-        "value": "z",
+        "value": "b",
         "line": 1
       }
     },
@@ -22,27 +22,27 @@
       "op": "=",
       "left": {
         "type": "NODE_ID",
-        "value": "y",
-        "line": 2
+        "value": "a",
+        "line": 1
       },
       "right": {
         "type": "NODE_NUM",
-        "value": "1",
-        "line": 2
+        "value": "10",
+        "line": 1
       }
     },
     "elseBranch": {
       "type": "NODE_COND",
-      "op": ">",
+      "op": "<",
       "left": {
         "type": "NODE_ID",
-        "value": "z",
-        "line": 4
+        "value": "b",
+        "line": 1
       },
       "right": {
         "type": "NODE_NUM",
-        "value": "23",
-        "line": 4
+        "value": "10",
+        "line": 1
       }
     }
   },

@@ -343,8 +343,6 @@ ASTNode* Parser::parse(const std::vector<Token>& tokens, const std::string& srcP
     std::string baseName = sourceName.substr(0, sourceName.find_last_of('.'));
     if (baseName.empty()) baseName = "test";
     std::string jsonPath = "../test/" + baseName + "_ast.json";
-
-    std::cerr << "Writing AST JSON to: " << jsonPath << std::endl;  // µ÷ÊÔÊä³ö
     writeASTToJSON(root, jsonPath);
 
     return root;
